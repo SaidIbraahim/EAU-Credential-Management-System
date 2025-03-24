@@ -27,35 +27,39 @@ const Students = () => {
     // In a real app, this would process the files and extract data
     // For now, we'll just simulate a successful import
     if (csvFile) {
-      // Simulate imported students (mock data)
+      // Simulate imported students (mock data based on the Excel sheet)
       const mockStudents = [
         {
           id: 1,
-          student_id: "STU001",
-          full_name: "John Smith",
+          student_id: "EAUGRW0001234",
+          certificate_id: "9685124",
+          full_name: "Ali Adam Jama",
           gender: "male" as const,
-          phone_number: "+1234567890",
+          phone_number: "+2.52908E+11",
           department: "Computer Science",
-          academic_year: "2023-2024",
-          gpa: 3.8,
+          academic_year: "2020-2021",
+          gpa: 3.5,
           grade: "A",
-          admission_date: new Date("2020-09-01"),
+          admission_date: new Date("2021-09-01"),
+          graduation_date: new Date("2025-06-31"),
           status: "cleared" as const,
           created_at: new Date(),
           updated_at: new Date(),
         },
         {
           id: 2,
-          student_id: "STU002",
-          full_name: "Jane Doe",
+          student_id: "EAUGRW0001265",
+          certificate_id: "cert20251354",
+          full_name: "Hawa Yusuf Ali",
           gender: "female" as const,
-          phone_number: "+0987654321",
-          department: "Mathematics",
-          academic_year: "2023-2024",
-          gpa: 3.9,
-          grade: "A",
+          phone_number: "+2.52908E+11",
+          department: "Medicine",
+          academic_year: "2019-2020",
+          gpa: 3.4,
+          grade: "B",
           admission_date: new Date("2020-09-01"),
-          status: "cleared" as const,
+          graduation_date: new Date("2024-06-31"),
+          status: "uncleared" as const,
           created_at: new Date(),
           updated_at: new Date(),
         }
@@ -120,7 +124,7 @@ const Students = () => {
               <div>
                 <h3 className="text-lg font-medium mb-2">Import Student Data</h3>
                 <p className="text-sm text-gray-500 mb-4">
-                  Upload a CSV file containing student information. The file should include columns for Full Name, Student ID, Gender, Phone Number, Department, Academic Year, GPA, Grade, Admission Date, Graduation Date, and Status.
+                  Upload a CSV file containing student information. The file should include columns for Full Name, Student ID, Certificate ID, Gender, Phone Number, Department, Academic Year, GPA, Grade, Admission Date, Graduation Date, and Status.
                 </p>
                 
                 <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -198,6 +202,9 @@ const Students = () => {
                             Student ID
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Certificate ID
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Full Name
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -205,6 +212,9 @@ const Students = () => {
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Department
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Academic Year
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             GPA
@@ -221,6 +231,9 @@ const Students = () => {
                               {student.student_id}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {student.certificate_id}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {student.full_name}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -228,6 +241,9 @@ const Students = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {student.department}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {student.academic_year}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {student.gpa}
