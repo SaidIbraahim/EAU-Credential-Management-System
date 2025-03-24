@@ -1,17 +1,23 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Download, Upload, Filter, PlusCircle } from "lucide-react";
 import { Student } from "@/types";
+import { parseCSV, processZipFile } from "@/utils/fileUtils";
+import { studentsApi, auditLogApi } from "@/api/apiClient";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Students = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [importedStudents, setImportedStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'csv' | 'zip') => {
     if (e.target.files && e.target.files[0]) {
@@ -23,63 +29,99 @@ const Students = () => {
     }
   };
   
-  const handleImport = () => {
-    // In a real app, this would process the files and extract data
-    // For now, we'll just simulate a successful import
-    if (csvFile) {
-      // Simulate imported students (mock data based on the Excel sheet)
-      const mockStudents = [
-        {
-          id: 1,
-          student_id: "EAUGRW0001234",
-          certificate_id: "9685124",
-          full_name: "Ali Adam Jama",
-          gender: "male" as const,
-          phone_number: "+2.52908E+11",
-          department: "Computer Science",
-          academic_year: "2020-2021",
-          gpa: 3.5,
-          grade: "A",
-          admission_date: new Date("2021-09-01"),
-          graduation_date: new Date("2025-06-31"),
-          status: "cleared" as const,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        {
-          id: 2,
-          student_id: "EAUGRW0001265",
-          certificate_id: "cert20251354",
-          full_name: "Hawa Yusuf Ali",
-          gender: "female" as const,
-          phone_number: "+2.52908E+11",
-          department: "Medicine",
-          academic_year: "2019-2020",
-          gpa: 3.4,
-          grade: "B",
-          admission_date: new Date("2020-09-01"),
-          graduation_date: new Date("2024-06-31"),
-          status: "uncleared" as const,
-          created_at: new Date(),
-          updated_at: new Date(),
-        }
-      ];
+  const handleImport = async () => {
+    if (!csvFile) {
+      toast.error("Please select a CSV file to import");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const parsedStudents = await parseCSV(csvFile);
+      setImportedStudents(parsedStudents);
       
-      setImportedStudents(mockStudents);
+      if (zipFile) {
+        const zipResult = await processZipFile(zipFile);
+        console.log(zipResult);
+      }
+      
+      toast.success(`Successfully parsed ${parsedStudents.length} students from CSV`);
+    } catch (error) {
+      console.error("Import error:", error);
+      toast.error("Error importing students: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsLoading(false);
     }
   };
+  
+  const handleConfirmImport = async () => {
+    if (importedStudents.length === 0) {
+      toast.error("No students to import");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const result = await studentsApi.bulkImport(importedStudents);
+      
+      await auditLogApi.logAction("Bulk Import", `Imported ${result.count} students from CSV file`);
+      
+      toast.success(`Successfully imported ${result.count} students`);
+      
+      setCsvFile(null);
+      setZipFile(null);
+      setImportedStudents([]);
+      
+      setActiveTab("list");
+      
+      fetchStudents();
+    } catch (error) {
+      console.error("Import confirmation error:", error);
+      toast.error("Error confirming import: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchStudents = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await studentsApi.getAll();
+      setStudents(data);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+      toast.error("Error loading students");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleRegisterStudent = () => {
+    navigate("/students/new");
+  };
+  
+  const filteredStudents = students.filter(student => 
+    student.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    student.department.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto w-full animation-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold tracking-tight">Students</h2>
-        <Button className="bg-primary-500 hover:bg-primary-600 text-white">
+        <Button 
+          className="bg-primary-500 hover:bg-primary-600 text-white"
+          onClick={handleRegisterStudent}
+        >
           <PlusCircle className="mr-2 h-4 w-4" />
           Register Student
         </Button>
       </div>
       
-      <Tabs defaultValue="list" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue="list" className="w-full" onValueChange={setActiveTab} value={activeTab}>
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="list">Student List</TabsTrigger>
           <TabsTrigger value="import">Bulk Import</TabsTrigger>
@@ -109,11 +151,85 @@ const Students = () => {
               </div>
             </div>
             
-            <div className="p-6 min-h-80 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-gray-500 mb-2">No students found</p>
-                <p className="text-sm text-gray-400">Add students or import them from a CSV file</p>
-              </div>
+            <div className="overflow-x-auto">
+              {isLoading ? (
+                <div className="p-6 text-center">
+                  <p className="text-gray-500">Loading students...</p>
+                </div>
+              ) : filteredStudents.length > 0 ? (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Student ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Full Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Department
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Academic Year
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        GPA
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredStudents.map((student) => (
+                      <tr key={student.id} className="hover:bg-gray-50 cursor-pointer" 
+                          onClick={() => navigate(`/students/${student.id}`)}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {student.student_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.full_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.department}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.academic_year}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {student.gpa}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            student.status === 'cleared' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {student.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <Button variant="ghost" size="sm" 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/students/${student.id}`);
+                                  }}>
+                            View
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-6 min-h-80 flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-gray-500 mb-2">No students found</p>
+                    <p className="text-sm text-gray-400">Add students or import them from a CSV file</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>
@@ -262,11 +378,24 @@ const Students = () => {
                   </div>
                   
                   <div className="mt-4 flex justify-end">
-                    <Button variant="outline" className="mr-2">
+                    <Button 
+                      variant="outline" 
+                      className="mr-2"
+                      onClick={() => {
+                        setCsvFile(null);
+                        setZipFile(null);
+                        setImportedStudents([]);
+                      }}
+                      disabled={isLoading}
+                    >
                       Cancel
                     </Button>
-                    <Button className="bg-primary-500 hover:bg-primary-600 text-white">
-                      Confirm Import
+                    <Button 
+                      className="bg-primary-500 hover:bg-primary-600 text-white"
+                      onClick={handleConfirmImport}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Processing...' : 'Confirm Import'}
                     </Button>
                   </div>
                 </div>

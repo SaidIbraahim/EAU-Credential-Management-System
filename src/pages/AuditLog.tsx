@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { ClipboardList, Download, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AuditLog } from "@/types";
+import { AuditLog as AuditLogType } from "@/types";
 
 // Mock data for audit logs
-const mockAuditLogs: AuditLog[] = [
+const mockAuditLogs: AuditLogType[] = [
   {
     id: 1,
     user_id: 1,
@@ -52,9 +51,9 @@ const mockUsers = {
   3: "john.doe"
 };
 
-const AuditLog = () => {
+const AuditLogPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [logs, setLogs] = useState<AuditLog[]>(mockAuditLogs);
+  const [logs, setLogs] = useState<AuditLogType[]>(mockAuditLogs);
 
   const filteredLogs = logs.filter(log => 
     log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -179,4 +178,4 @@ const AuditLog = () => {
   );
 };
 
-export default AuditLog;
+export default AuditLogPage;

@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 // Pages
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
+import StudentDetail from "./pages/StudentDetail";
 import Reports from "./pages/Reports";
 import AuditLog from "./pages/AuditLog";
 import Settings from "./pages/Settings";
@@ -64,6 +65,14 @@ const App = () => (
             element={
               <Layout>
                 <Students />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/students/:id" 
+            element={
+              <Layout>
+                <StudentDetail />
               </Layout>
             } 
           />
