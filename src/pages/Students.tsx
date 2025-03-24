@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Download, Upload, Filter, PlusCircle, AlertCircle } from "lucide-react";
 import { Student } from "@/types";
-import { parseCSV, processZipFile } from "@/utils/fileUtils";
+import { parseCSV, processZipFile, validateStudents } from "@/utils/fileUtils";
 import { studentsApi, auditLogApi } from "@/api/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -40,51 +39,6 @@ const Students = () => {
     }
   };
   
-  const validateStudents = (parsedStudents: Student[]): boolean => {
-    const newErrors: string[] = [];
-    const potentialDuplicates: Student[] = [];
-    
-    // Check for required fields
-    parsedStudents.forEach((student, index) => {
-      if (!student.student_id) {
-        newErrors.push(`Row ${index + 1}: Missing Student ID`);
-      }
-      if (!student.full_name) {
-        newErrors.push(`Row ${index + 1}: Missing Full Name`);
-      }
-      if (!student.department) {
-        newErrors.push(`Row ${index + 1}: Missing Department`);
-      }
-    });
-    
-    // Check for duplicates within the imported data
-    const studentIdMap = new Map<string, number>();
-    parsedStudents.forEach((student, index) => {
-      if (student.student_id && studentIdMap.has(student.student_id)) {
-        newErrors.push(`Duplicate Student ID: ${student.student_id} at rows ${studentIdMap.get(student.student_id)! + 1} and ${index + 1}`);
-      } else if (student.student_id) {
-        studentIdMap.set(student.student_id, index);
-      }
-    });
-    
-    // Check for duplicates with existing data
-    parsedStudents.forEach(newStudent => {
-      const duplicate = students.find(existingStudent => 
-        existingStudent.student_id === newStudent.student_id
-      );
-      
-      if (duplicate) {
-        potentialDuplicates.push(newStudent);
-        newErrors.push(`Student ID ${newStudent.student_id} already exists in the system`);
-      }
-    });
-    
-    setErrors(newErrors);
-    setDuplicates(potentialDuplicates);
-    
-    return newErrors.length === 0;
-  };
-  
   const handleImport = async () => {
     if (!csvFile) {
       toast.error("Please select a CSV file to import");
@@ -98,19 +52,27 @@ const Students = () => {
     try {
       const parsedStudents = await parseCSV(csvFile);
       
-      // Validate the parsed students
-      const isValid = validateStudents(parsedStudents);
+      // Validate the parsed students against existing data
+      const { validStudents, duplicates: foundDuplicates, errors: validationErrors } = 
+        validateStudents(parsedStudents, students);
       
-      if (isValid) {
-        setImportedStudents(parsedStudents);
-        
-        if (zipFile) {
-          const zipResult = await processZipFile(zipFile);
-          console.log(zipResult);
-        }
-        
-        toast.success(`Successfully parsed ${parsedStudents.length} students from CSV`);
+      setDuplicates(foundDuplicates);
+      
+      if (validationErrors.length > 0) {
+        setErrors(validationErrors);
+        toast.warning(`Found ${validationErrors.length} validation issues.`);
       }
+      
+      // Show the valid students in the preview
+      setImportedStudents(parsedStudents);
+      
+      if (zipFile) {
+        const zipResult = await processZipFile(zipFile);
+        console.log(zipResult);
+        toast.success("ZIP file processed successfully");
+      }
+      
+      toast.success(`Successfully parsed ${parsedStudents.length} students from CSV`);
     } catch (error) {
       console.error("Import error:", error);
       setErrors([`Error parsing CSV: ${error instanceof Error ? error.message : "Unknown error"}`]);
@@ -129,12 +91,24 @@ const Students = () => {
     setIsLoading(true);
     
     try {
-      const result = await studentsApi.bulkImport(importedStudents);
+      // Filter out duplicates if the user still wants to proceed
+      const studentsToImport = importedStudents.filter(
+        student => !duplicates.some(dup => dup.student_id === student.student_id)
+      );
+      
+      if (studentsToImport.length === 0) {
+        toast.error("All students are duplicates. No new students to import.");
+        setIsLoading(false);
+        return;
+      }
+      
+      const result = await studentsApi.bulkImport(studentsToImport);
       
       await auditLogApi.logAction("Bulk Import", `Imported ${result.count} students from CSV file`);
       
       toast.success(`Successfully imported ${result.count} students`);
       
+      // Clear the form
       setCsvFile(null);
       setZipFile(null);
       setImportedStudents([]);
@@ -143,6 +117,7 @@ const Students = () => {
       
       setActiveTab("list");
       
+      // Refresh the student list
       fetchStudents();
     } catch (error) {
       console.error("Import confirmation error:", error);
@@ -166,8 +141,11 @@ const Students = () => {
   };
   
   const handleRegisterStudent = () => {
-    // Switch to the import tab instead of navigating to a new page
+    // Redirect to the bulk import tab instead of a separate page
     setActiveTab("import");
+    // Scroll to the top of the page to make the import tab visible
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast.info("Please use bulk import to register students");
   };
   
   const filteredStudents = students.filter(student => 

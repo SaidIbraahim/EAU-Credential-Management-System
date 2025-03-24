@@ -16,170 +16,316 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
+// Helper function to make API requests
+const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+    return handleResponse(response);
+  } catch (error) {
+    console.error('API request error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Network error';
+    toast.error(`API Error: ${errorMessage}`);
+    throw error;
+  }
+};
+
 // Students API
 export const studentsApi = {
   getAll: async (page = 1, limit = 10, filters = {}): Promise<{ data: Student[], total: number }> => {
-    // For now, return mock data
-    return { 
-      data: MOCK_STUDENTS,
-      total: MOCK_STUDENTS.length
-    };
+    try {
+      // In production, this would call the actual API
+      // const queryParams = new URLSearchParams({ page: page.toString(), limit: limit.toString(), ...filters });
+      // return apiRequest(`/students?${queryParams}`);
+      
+      // For now, return mock data
+      return { 
+        data: MOCK_STUDENTS,
+        total: MOCK_STUDENTS.length
+      };
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      throw error;
+    }
   },
   
   getById: async (id: string): Promise<Student> => {
-    // For now, return mock data
-    const student = MOCK_STUDENTS.find(s => s.id.toString() === id);
-    if (!student) {
-      throw new Error('Student not found');
+    try {
+      // In production: return apiRequest(`/students/${id}`);
+      
+      // For now, return mock data
+      const student = MOCK_STUDENTS.find(s => s.id.toString() === id);
+      if (!student) {
+        throw new Error('Student not found');
+      }
+      return student;
+    } catch (error) {
+      console.error(`Error fetching student ${id}:`, error);
+      throw error;
     }
-    return student;
   },
   
   create: async (student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> => {
-    // In a real implementation, this would make a POST request
-    // For now, log the data and return a mock response
-    console.log('Creating student:', student);
-    return {
-      ...student,
-      id: Math.floor(Math.random() * 1000),
-      created_at: new Date(),
-      updated_at: new Date()
-    };
+    try {
+      // In production: return apiRequest('/students', { method: 'POST', body: JSON.stringify(student) });
+      
+      // For now, log the data and return a mock response
+      console.log('Creating student:', student);
+      return {
+        ...student,
+        id: Math.floor(Math.random() * 1000),
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+    } catch (error) {
+      console.error('Error creating student:', error);
+      throw error;
+    }
   },
   
   update: async (id: string, student: Partial<Student>): Promise<Student> => {
-    // In a real implementation, this would make a PUT request
-    // For now, log the data and return a mock response
-    console.log(`Updating student ${id}:`, student);
-    return {
-      ...MOCK_STUDENTS.find(s => s.id.toString() === id)!,
-      ...student,
-      updated_at: new Date()
-    };
+    try {
+      // In production: return apiRequest(`/students/${id}`, { method: 'PUT', body: JSON.stringify(student) });
+      
+      // For now, log the data and return a mock response
+      console.log(`Updating student ${id}:`, student);
+      return {
+        ...MOCK_STUDENTS.find(s => s.id.toString() === id)!,
+        ...student,
+        updated_at: new Date()
+      };
+    } catch (error) {
+      console.error(`Error updating student ${id}:`, error);
+      throw error;
+    }
   },
   
   delete: async (id: string): Promise<void> => {
-    // In a real implementation, this would make a DELETE request
-    // For now, just log the action
-    console.log(`Deleting student ${id}`);
+    try {
+      // In production: return apiRequest(`/students/${id}`, { method: 'DELETE' });
+      
+      // For now, just log the action
+      console.log(`Deleting student ${id}`);
+    } catch (error) {
+      console.error(`Error deleting student ${id}:`, error);
+      throw error;
+    }
   },
   
   bulkImport: async (students: Omit<Student, 'id' | 'created_at' | 'updated_at'>[]): Promise<{ success: boolean, count: number }> => {
-    // In a real implementation, this would make a POST request with the students data
-    // For now, log the data and return a mock response
-    console.log('Bulk importing students:', students);
-    return { success: true, count: students.length };
+    try {
+      // In production: return apiRequest('/students/bulk-import', { method: 'POST', body: JSON.stringify({ students }) });
+      
+      // For now, log the data and return a mock response
+      console.log('Bulk importing students:', students);
+      return { success: true, count: students.length };
+    } catch (error) {
+      console.error('Error bulk importing students:', error);
+      throw error;
+    }
   }
 };
 
 // Documents API
 export const documentsApi = {
   upload: async (studentId: string, files: File[]): Promise<Document[]> => {
-    // In a real implementation, this would upload files to cloud storage
-    // For now, log the action and return mock responses
-    console.log(`Uploading ${files.length} files for student ${studentId}`);
-    return files.map((file, index) => ({
-      id: Math.floor(Math.random() * 1000) + index,
-      student_id: parseInt(studentId),
-      document_type: 'supporting',
-      file_name: file.name,
-      file_size: file.size,
-      file_type: file.type,
-      file_url: URL.createObjectURL(file),
-      upload_date: new Date()
-    }));
+    try {
+      // In production, this would upload files to cloud storage using FormData
+      // const formData = new FormData();
+      // formData.append('studentId', studentId);
+      // files.forEach((file, i) => formData.append(`file${i}`, file));
+      // return apiRequest('/documents/upload', { method: 'POST', body: formData, headers: {} });
+      
+      // For now, log the action and return mock responses
+      console.log(`Uploading ${files.length} files for student ${studentId}`);
+      return files.map((file, index) => ({
+        id: Math.floor(Math.random() * 1000) + index,
+        student_id: parseInt(studentId),
+        document_type: 'supporting',
+        file_name: file.name,
+        file_size: file.size,
+        file_type: file.type,
+        file_url: URL.createObjectURL(file),
+        upload_date: new Date()
+      }));
+    } catch (error) {
+      console.error(`Error uploading documents for student ${studentId}:`, error);
+      throw error;
+    }
   },
   
   getByStudentId: async (studentId: string): Promise<Document[]> => {
-    // For now, return empty array
-    return [];
+    try {
+      // In production: return apiRequest(`/documents/${studentId}`);
+      
+      // For now, return empty array
+      return [];
+    } catch (error) {
+      console.error(`Error fetching documents for student ${studentId}:`, error);
+      throw error;
+    }
   }
 };
 
 // Reports API
 export const reportsApi = {
   generate: async (filters = {}): Promise<any> => {
-    // For now, return mock data
-    return {
-      departmentDistribution: [
-        { department: 'Computer Science', count: 45 },
-        { department: 'Medicine', count: 32 },
-        { department: 'Engineering', count: 28 },
-        { department: 'Business', count: 25 },
-        { department: 'Law', count: 18 }
-      ],
-      gpaDistribution: [
-        { range: '3.5-4.0', count: 35 },
-        { range: '3.0-3.5', count: 42 },
-        { range: '2.5-3.0', count: 38 },
-        { range: '2.0-2.5', count: 25 },
-        { range: 'Below 2.0', count: 12 }
-      ],
-      yearlyAdmissions: [
-        { year: '2018', count: 120 },
-        { year: '2019', count: 135 },
-        { year: '2020', count: 115 },
-        { year: '2021', count: 140 },
-        { year: '2022', count: 150 }
-      ]
-    };
+    try {
+      // In production: return apiRequest('/reports', { method: 'POST', body: JSON.stringify(filters) });
+      
+      // For now, return mock data
+      return {
+        departmentDistribution: [
+          { department: 'Computer Science', count: 45 },
+          { department: 'Medicine', count: 32 },
+          { department: 'Engineering', count: 28 },
+          { department: 'Business', count: 25 },
+          { department: 'Law', count: 18 }
+        ],
+        gpaDistribution: [
+          { range: '3.5-4.0', count: 35 },
+          { range: '3.0-3.5', count: 42 },
+          { range: '2.5-3.0', count: 38 },
+          { range: '2.0-2.5', count: 25 },
+          { range: 'Below 2.0', count: 12 }
+        ],
+        yearlyAdmissions: [
+          { year: '2018', count: 120 },
+          { year: '2019', count: 135 },
+          { year: '2020', count: 115 },
+          { year: '2021', count: 140 },
+          { year: '2022', count: 150 }
+        ]
+      };
+    } catch (error) {
+      console.error('Error generating reports:', error);
+      throw error;
+    }
   }
 };
 
 // Audit Log API
 export const auditLogApi = {
   getAll: async (page = 1, limit = 10): Promise<{ data: AuditLog[], total: number }> => {
-    // For now, return mock data from AuditLog.tsx
-    return {
-      data: MOCK_AUDIT_LOGS,
-      total: MOCK_AUDIT_LOGS.length
-    };
+    try {
+      // In production: return apiRequest(`/audit-log?page=${page}&limit=${limit}`);
+      
+      // For now, return mock data
+      return {
+        data: MOCK_AUDIT_LOGS,
+        total: MOCK_AUDIT_LOGS.length
+      };
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      throw error;
+    }
   },
   
   logAction: async (action: string, details: string): Promise<void> => {
-    // In a real implementation, this would make a POST request
-    // For now, just log the action
-    console.log(`Audit Log: ${action} - ${details}`);
+    try {
+      // In production: return apiRequest('/audit-log', { method: 'POST', body: JSON.stringify({ action, details }) });
+      
+      // For now, just log the action
+      console.log(`Audit Log: ${action} - ${details}`);
+    } catch (error) {
+      console.error('Error logging action:', error);
+      throw error;
+    }
   }
 };
 
 // Users API
 export const usersApi = {
   login: async (username: string, password: string): Promise<{ user: User, token: string }> => {
-    // For now, return mock data
-    if (username === 'admin' && password === 'password') {
+    try {
+      // In production: return apiRequest('/users/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+      
+      // For now, return mock data
+      if (username === 'admin' && password === 'password') {
+        return {
+          user: {
+            id: 1,
+            username: 'admin',
+            role: 'admin',
+            created_at: new Date(),
+            updated_at: new Date()
+          },
+          token: 'mock-jwt-token'
+        };
+      }
+      throw new Error('Invalid credentials');
+    } catch (error) {
+      console.error('Error logging in:', error);
+      throw error;
+    }
+  },
+  
+  register: async (userData: { username: string, password: string, role: 'admin' | 'super_admin' }): Promise<User> => {
+    try {
+      // In production: return apiRequest('/users/register', { method: 'POST', body: JSON.stringify(userData) });
+      
+      // For now, return a mock user
       return {
-        user: {
+        id: Math.floor(Math.random() * 1000),
+        username: userData.username,
+        role: userData.role,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+    } catch (error) {
+      console.error('Error registering user:', error);
+      throw error;
+    }
+  },
+  
+  getAll: async (): Promise<User[]> => {
+    try {
+      // In production: return apiRequest('/users');
+      
+      // For now, return mock data
+      return [
+        {
           id: 1,
           username: 'admin',
           role: 'admin',
           created_at: new Date(),
           updated_at: new Date()
         },
-        token: 'mock-jwt-token'
-      };
+        {
+          id: 2,
+          username: 'super_admin',
+          role: 'super_admin',
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      throw error;
     }
-    throw new Error('Invalid credentials');
   },
   
-  getAll: async (): Promise<User[]> => {
-    // For now, return mock data
-    return [
-      {
-        id: 1,
-        username: 'admin',
-        role: 'admin',
+  update: async (id: number, userData: Partial<User>): Promise<User> => {
+    try {
+      // In production: return apiRequest(`/users/${id}`, { method: 'PUT', body: JSON.stringify(userData) });
+      
+      // For now, return mock data
+      return {
+        id,
+        username: userData.username || 'admin',
+        role: userData.role || 'admin',
         created_at: new Date(),
         updated_at: new Date()
-      },
-      {
-        id: 2,
-        username: 'super_admin',
-        role: 'super_admin',
-        created_at: new Date(),
-        updated_at: new Date()
-      }
-    ];
+      };
+    } catch (error) {
+      console.error(`Error updating user ${id}:`, error);
+      throw error;
+    }
   }
 };
 
