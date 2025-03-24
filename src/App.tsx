@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Reports from "./pages/Reports";
+import AuditLog from "./pages/AuditLog";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -71,6 +72,14 @@ const App = () => (
             element={
               <Layout>
                 <Reports />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/audit-log" 
+            element={
+              <Layout>
+                <AuditLog />
               </Layout>
             } 
           />

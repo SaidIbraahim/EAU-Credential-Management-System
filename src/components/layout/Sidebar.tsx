@@ -7,7 +7,8 @@ import {
   Settings, 
   LogOut, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  ClipboardList
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,11 @@ export function Sidebar() {
       name: "Reports", 
       path: "/reports", 
       icon: <FileText className="w-5 h-5" /> 
+    },
+    { 
+      name: "Audit Log", 
+      path: "/audit-log", 
+      icon: <ClipboardList className="w-5 h-5" /> 
     },
     { 
       name: "Settings", 
