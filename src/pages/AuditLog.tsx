@@ -41,7 +41,7 @@ const mockAuditLogs: AuditLog[] = [
     user_id: 2,
     action: "Student Deleted",
     details: "Removed student 'Alex Johnson' with ID 'ST2023015'",
-    timestamp: new Date(2023, 5, 6, 10, 05)
+    timestamp: new Date(2023, 5, 6, 10, 5)  // Fixed: Changed '10, 05' to '10, 5'
   }
 ];
 
