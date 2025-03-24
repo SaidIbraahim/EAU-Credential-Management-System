@@ -1,13 +1,15 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Download, Upload, Filter, PlusCircle } from "lucide-react";
+import { Search, Download, Upload, Filter, PlusCircle, AlertCircle } from "lucide-react";
 import { Student } from "@/types";
 import { parseCSV, processZipFile } from "@/utils/fileUtils";
 import { studentsApi, auditLogApi } from "@/api/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Students = () => {
   const navigate = useNavigate();
@@ -18,15 +20,69 @@ const Students = () => {
   const [importedStudents, setImportedStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [duplicates, setDuplicates] = useState<Student[]>([]);
+  
+  useEffect(() => {
+    fetchStudents();
+  }, []);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'csv' | 'zip') => {
     if (e.target.files && e.target.files[0]) {
       if (fileType === 'csv') {
         setCsvFile(e.target.files[0]);
+        setErrors([]);
+        setDuplicates([]);
+        setImportedStudents([]);
       } else {
         setZipFile(e.target.files[0]);
       }
     }
+  };
+  
+  const validateStudents = (parsedStudents: Student[]): boolean => {
+    const newErrors: string[] = [];
+    const potentialDuplicates: Student[] = [];
+    
+    // Check for required fields
+    parsedStudents.forEach((student, index) => {
+      if (!student.student_id) {
+        newErrors.push(`Row ${index + 1}: Missing Student ID`);
+      }
+      if (!student.full_name) {
+        newErrors.push(`Row ${index + 1}: Missing Full Name`);
+      }
+      if (!student.department) {
+        newErrors.push(`Row ${index + 1}: Missing Department`);
+      }
+    });
+    
+    // Check for duplicates within the imported data
+    const studentIdMap = new Map<string, number>();
+    parsedStudents.forEach((student, index) => {
+      if (student.student_id && studentIdMap.has(student.student_id)) {
+        newErrors.push(`Duplicate Student ID: ${student.student_id} at rows ${studentIdMap.get(student.student_id)! + 1} and ${index + 1}`);
+      } else if (student.student_id) {
+        studentIdMap.set(student.student_id, index);
+      }
+    });
+    
+    // Check for duplicates with existing data
+    parsedStudents.forEach(newStudent => {
+      const duplicate = students.find(existingStudent => 
+        existingStudent.student_id === newStudent.student_id
+      );
+      
+      if (duplicate) {
+        potentialDuplicates.push(newStudent);
+        newErrors.push(`Student ID ${newStudent.student_id} already exists in the system`);
+      }
+    });
+    
+    setErrors(newErrors);
+    setDuplicates(potentialDuplicates);
+    
+    return newErrors.length === 0;
   };
   
   const handleImport = async () => {
@@ -36,19 +92,28 @@ const Students = () => {
     }
     
     setIsLoading(true);
+    setErrors([]);
+    setDuplicates([]);
     
     try {
       const parsedStudents = await parseCSV(csvFile);
-      setImportedStudents(parsedStudents);
       
-      if (zipFile) {
-        const zipResult = await processZipFile(zipFile);
-        console.log(zipResult);
+      // Validate the parsed students
+      const isValid = validateStudents(parsedStudents);
+      
+      if (isValid) {
+        setImportedStudents(parsedStudents);
+        
+        if (zipFile) {
+          const zipResult = await processZipFile(zipFile);
+          console.log(zipResult);
+        }
+        
+        toast.success(`Successfully parsed ${parsedStudents.length} students from CSV`);
       }
-      
-      toast.success(`Successfully parsed ${parsedStudents.length} students from CSV`);
     } catch (error) {
       console.error("Import error:", error);
+      setErrors([`Error parsing CSV: ${error instanceof Error ? error.message : "Unknown error"}`]);
       toast.error("Error importing students: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
       setIsLoading(false);
@@ -73,6 +138,8 @@ const Students = () => {
       setCsvFile(null);
       setZipFile(null);
       setImportedStudents([]);
+      setErrors([]);
+      setDuplicates([]);
       
       setActiveTab("list");
       
@@ -99,7 +166,8 @@ const Students = () => {
   };
   
   const handleRegisterStudent = () => {
-    navigate("/students/new");
+    // Switch to the import tab instead of navigating to a new page
+    setActiveTab("import");
   };
   
   const filteredStudents = students.filter(student => 
@@ -237,6 +305,20 @@ const Students = () => {
         <TabsContent value="import" className="animation-fade-in">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <div className="grid grid-cols-1 gap-6">
+              {errors.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc pl-5 space-y-1 mt-2">
+                      {errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div>
                 <h3 className="text-lg font-medium mb-2">Import Student Data</h3>
                 <p className="text-sm text-gray-500 mb-4">
@@ -300,12 +382,27 @@ const Students = () => {
               <div className="flex justify-end">
                 <Button 
                   className="bg-primary-500 hover:bg-primary-600 text-white"
-                  disabled={!csvFile}
+                  disabled={!csvFile || isLoading}
                   onClick={handleImport}
                 >
-                  Import Data
+                  {isLoading ? 'Processing...' : 'Import Data'}
                 </Button>
               </div>
+              
+              {duplicates.length > 0 && (
+                <Alert className="bg-yellow-50 border-yellow-200">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <AlertTitle className="text-yellow-800">Warning: Duplicate Students</AlertTitle>
+                  <AlertDescription className="text-yellow-700">
+                    <p className="mb-2">The following students already exist in the system:</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {duplicates.map((student, index) => (
+                        <li key={index}>{student.full_name} (ID: {student.student_id})</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
               
               {importedStudents.length > 0 && (
                 <div className="mt-6">
@@ -385,6 +482,8 @@ const Students = () => {
                         setCsvFile(null);
                         setZipFile(null);
                         setImportedStudents([]);
+                        setErrors([]);
+                        setDuplicates([]);
                       }}
                       disabled={isLoading}
                     >
@@ -393,7 +492,7 @@ const Students = () => {
                     <Button 
                       className="bg-primary-500 hover:bg-primary-600 text-white"
                       onClick={handleConfirmImport}
-                      disabled={isLoading}
+                      disabled={isLoading || errors.length > 0}
                     >
                       {isLoading ? 'Processing...' : 'Confirm Import'}
                     </Button>
