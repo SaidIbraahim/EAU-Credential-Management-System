@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Upload, XCircle, FileImage, FilePdf, FileText } from "lucide-react";
+import { Upload, XCircle, FileImage, FileText, File } from "lucide-react";
 
 interface DocumentUploaderProps {
   type: 'photo' | 'transcript' | 'certificate' | 'supporting';
@@ -54,7 +54,7 @@ const DocumentUploader = ({
     if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('jpeg') || fileType.includes('png')) {
       return <FileImage className="h-4 w-4 mr-2 text-blue-500" />;
     } else if (fileType.includes('pdf')) {
-      return <FilePdf className="h-4 w-4 mr-2 text-red-500" />;
+      return <File className="h-4 w-4 mr-2 text-red-500" />;
     } else {
       return <FileText className="h-4 w-4 mr-2 text-gray-500" />;
     }
