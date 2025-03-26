@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -74,11 +75,10 @@ const formSchema = z.object({
   phone_number: z.string().optional(),
   department_id: z.string(),
   academic_year_id: z.string(),
-  gpa: z.string()
-    .transform((val) => parseFloat(val))
-    .refine((val) => val >= 0 && val <= 4.0, {
-      message: "GPA must be between 0 and 4.0"
-    }),
+  gpa: z.coerce.number()
+    .min(0, { message: "GPA must be at least 0" })
+    .max(4.0, { message: "GPA must be no more than 4.0" })
+    .step(0.01, { message: "GPA can have up to 2 decimal places" }),
   grade: z.string().optional(),
   admission_date: z.date({
     required_error: "Admission date is required",
