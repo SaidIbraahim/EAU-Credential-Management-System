@@ -12,7 +12,23 @@ export interface Student {
   grade: string;
   admission_date: Date;
   graduation_date?: Date;
-  status: 'cleared' | 'uncleared';
+  status: 'cleared' | 'un-cleared';
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface Department {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface AcademicYear {
+  id: number;
+  academic_year: string;
   created_at: Date;
   updated_at: Date;
 }

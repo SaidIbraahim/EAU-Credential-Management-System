@@ -1,11 +1,8 @@
-
 import { Student, Document, AuditLog, User } from '@/types';
 import { toast } from "sonner";
 
-// Base API URL - would come from environment in production
 const API_BASE_URL = '/api';
 
-// Helper function to handle API responses
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -16,7 +13,6 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
-// Helper function to make API requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -35,15 +31,9 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   }
 };
 
-// Students API
 export const studentsApi = {
   getAll: async (page = 1, limit = 10, filters = {}): Promise<{ data: Student[], total: number }> => {
     try {
-      // In production, this would call the actual API
-      // const queryParams = new URLSearchParams({ page: page.toString(), limit: limit.toString(), ...filters });
-      // return apiRequest(`/students?${queryParams}`);
-      
-      // For now, return mock data
       return { 
         data: MOCK_STUDENTS,
         total: MOCK_STUDENTS.length
@@ -56,9 +46,6 @@ export const studentsApi = {
   
   getById: async (id: string): Promise<Student> => {
     try {
-      // In production: return apiRequest(`/students/${id}`);
-      
-      // For now, return mock data
       const student = MOCK_STUDENTS.find(s => s.id.toString() === id);
       if (!student) {
         throw new Error('Student not found');
@@ -72,9 +59,6 @@ export const studentsApi = {
   
   create: async (student: Omit<Student, 'id' | 'created_at' | 'updated_at'>): Promise<Student> => {
     try {
-      // In production: return apiRequest('/students', { method: 'POST', body: JSON.stringify(student) });
-      
-      // For now, log the data and return a mock response
       console.log('Creating student:', student);
       return {
         ...student,
@@ -90,9 +74,6 @@ export const studentsApi = {
   
   update: async (id: string, student: Partial<Student>): Promise<Student> => {
     try {
-      // In production: return apiRequest(`/students/${id}`, { method: 'PUT', body: JSON.stringify(student) });
-      
-      // For now, log the data and return a mock response
       console.log(`Updating student ${id}:`, student);
       return {
         ...MOCK_STUDENTS.find(s => s.id.toString() === id)!,
@@ -107,9 +88,6 @@ export const studentsApi = {
   
   delete: async (id: string): Promise<void> => {
     try {
-      // In production: return apiRequest(`/students/${id}`, { method: 'DELETE' });
-      
-      // For now, just log the action
       console.log(`Deleting student ${id}`);
     } catch (error) {
       console.error(`Error deleting student ${id}:`, error);
@@ -119,9 +97,6 @@ export const studentsApi = {
   
   bulkImport: async (students: Omit<Student, 'id' | 'created_at' | 'updated_at'>[]): Promise<{ success: boolean, count: number }> => {
     try {
-      // In production: return apiRequest('/students/bulk-import', { method: 'POST', body: JSON.stringify({ students }) });
-      
-      // For now, log the data and return a mock response
       console.log('Bulk importing students:', students);
       return { success: true, count: students.length };
     } catch (error) {
@@ -131,22 +106,14 @@ export const studentsApi = {
   }
 };
 
-// Documents API
 export const documentsApi = {
   upload: async (studentId: string, files: File[]): Promise<Document[]> => {
     try {
-      // In production, this would upload files to cloud storage using FormData
-      // const formData = new FormData();
-      // formData.append('studentId', studentId);
-      // files.forEach((file, i) => formData.append(`file${i}`, file));
-      // return apiRequest('/documents/upload', { method: 'POST', body: formData, headers: {} });
-      
-      // For now, log the action and return mock responses
       console.log(`Uploading ${files.length} files for student ${studentId}`);
       return files.map((file, index) => ({
         id: Math.floor(Math.random() * 1000) + index,
         student_id: parseInt(studentId),
-        document_type: 'supporting',
+        document_type: file.type.includes('image') ? 'photo' : 'supporting',
         file_name: file.name,
         file_size: file.size,
         file_type: file.type,
@@ -161,9 +128,6 @@ export const documentsApi = {
   
   getByStudentId: async (studentId: string): Promise<Document[]> => {
     try {
-      // In production: return apiRequest(`/documents/${studentId}`);
-      
-      // For now, return empty array
       return [];
     } catch (error) {
       console.error(`Error fetching documents for student ${studentId}:`, error);
@@ -172,13 +136,9 @@ export const documentsApi = {
   }
 };
 
-// Reports API
 export const reportsApi = {
   generate: async (filters = {}): Promise<any> => {
     try {
-      // In production: return apiRequest('/reports', { method: 'POST', body: JSON.stringify(filters) });
-      
-      // For now, return mock data
       return {
         departmentDistribution: [
           { department: 'Computer Science', count: 45 },
@@ -209,13 +169,9 @@ export const reportsApi = {
   }
 };
 
-// Audit Log API
 export const auditLogApi = {
   getAll: async (page = 1, limit = 10): Promise<{ data: AuditLog[], total: number }> => {
     try {
-      // In production: return apiRequest(`/audit-log?page=${page}&limit=${limit}`);
-      
-      // For now, return mock data
       return {
         data: MOCK_AUDIT_LOGS,
         total: MOCK_AUDIT_LOGS.length
@@ -228,9 +184,6 @@ export const auditLogApi = {
   
   logAction: async (action: string, details: string): Promise<void> => {
     try {
-      // In production: return apiRequest('/audit-log', { method: 'POST', body: JSON.stringify({ action, details }) });
-      
-      // For now, just log the action
       console.log(`Audit Log: ${action} - ${details}`);
     } catch (error) {
       console.error('Error logging action:', error);
@@ -239,13 +192,9 @@ export const auditLogApi = {
   }
 };
 
-// Users API
 export const usersApi = {
   login: async (username: string, password: string): Promise<{ user: User, token: string }> => {
     try {
-      // In production: return apiRequest('/users/login', { method: 'POST', body: JSON.stringify({ username, password }) });
-      
-      // For now, return mock data
       if (username === 'admin' && password === 'password') {
         return {
           user: {
@@ -267,9 +216,6 @@ export const usersApi = {
   
   register: async (userData: { username: string, password: string, role: 'admin' | 'super_admin' }): Promise<User> => {
     try {
-      // In production: return apiRequest('/users/register', { method: 'POST', body: JSON.stringify(userData) });
-      
-      // For now, return a mock user
       return {
         id: Math.floor(Math.random() * 1000),
         username: userData.username,
@@ -285,9 +231,6 @@ export const usersApi = {
   
   getAll: async (): Promise<User[]> => {
     try {
-      // In production: return apiRequest('/users');
-      
-      // For now, return mock data
       return [
         {
           id: 1,
@@ -312,9 +255,6 @@ export const usersApi = {
   
   update: async (id: number, userData: Partial<User>): Promise<User> => {
     try {
-      // In production: return apiRequest(`/users/${id}`, { method: 'PUT', body: JSON.stringify(userData) });
-      
-      // For now, return mock data
       return {
         id,
         username: userData.username || 'admin',
@@ -329,7 +269,6 @@ export const usersApi = {
   }
 };
 
-// Mock data for students
 const MOCK_STUDENTS: Student[] = [
   {
     id: 1,
@@ -367,7 +306,6 @@ const MOCK_STUDENTS: Student[] = [
   }
 ];
 
-// Mock data for audit logs
 const MOCK_AUDIT_LOGS: AuditLog[] = [
   {
     id: 1,

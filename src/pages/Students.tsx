@@ -9,6 +9,7 @@ import { studentsApi, auditLogApi } from "@/api/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import StudentRegistrationForm from "@/components/students/StudentRegistrationForm";
 
 const Students = () => {
   const navigate = useNavigate();
@@ -52,7 +53,6 @@ const Students = () => {
     try {
       const parsedStudents = await parseCSV(csvFile);
       
-      // Validate the parsed students against existing data
       const { validStudents, duplicates: foundDuplicates, errors: validationErrors } = 
         validateStudents(parsedStudents, students);
       
@@ -63,7 +63,6 @@ const Students = () => {
         toast.warning(`Found ${validationErrors.length} validation issues.`);
       }
       
-      // Show the valid students in the preview
       setImportedStudents(parsedStudents);
       
       if (zipFile) {
@@ -91,7 +90,6 @@ const Students = () => {
     setIsLoading(true);
     
     try {
-      // Filter out duplicates if the user still wants to proceed
       const studentsToImport = importedStudents.filter(
         student => !duplicates.some(dup => dup.student_id === student.student_id)
       );
@@ -108,7 +106,6 @@ const Students = () => {
       
       toast.success(`Successfully imported ${result.count} students`);
       
-      // Clear the form
       setCsvFile(null);
       setZipFile(null);
       setImportedStudents([]);
@@ -117,7 +114,6 @@ const Students = () => {
       
       setActiveTab("list");
       
-      // Refresh the student list
       fetchStudents();
     } catch (error) {
       console.error("Import confirmation error:", error);
@@ -141,11 +137,8 @@ const Students = () => {
   };
   
   const handleRegisterStudent = () => {
-    // Redirect to the bulk import tab instead of a separate page
-    setActiveTab("import");
-    // Scroll to the top of the page to make the import tab visible
+    setActiveTab("register");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    toast.info("Please use bulk import to register students");
   };
   
   const filteredStudents = students.filter(student => 
@@ -153,6 +146,12 @@ const Students = () => {
     student.student_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     student.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  const handleRegistrationSuccess = () => {
+    fetchStudents();
+    toast.success("Student registered successfully!");
+    setActiveTab("list");
+  };
   
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto w-full animation-fade-in">
@@ -168,9 +167,10 @@ const Students = () => {
       </div>
       
       <Tabs defaultValue="list" className="w-full" onValueChange={setActiveTab} value={activeTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="list">Student List</TabsTrigger>
           <TabsTrigger value="import">Bulk Import</TabsTrigger>
+          <TabsTrigger value="register">Register Student</TabsTrigger>
         </TabsList>
         
         <TabsContent value="list" className="animation-fade-in">
@@ -282,21 +282,21 @@ const Students = () => {
         
         <TabsContent value="import" className="animation-fade-in">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            {errors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  <ul className="list-disc pl-5 space-y-1 mt-2">
+                    {errors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div className="grid grid-cols-1 gap-6">
-              {errors.length > 0 && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>
-                    <ul className="list-disc pl-5 space-y-1 mt-2">
-                      {errors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
               <div>
                 <h3 className="text-lg font-medium mb-2">Import Student Data</h3>
                 <p className="text-sm text-gray-500 mb-4">
@@ -478,6 +478,13 @@ const Students = () => {
                 </div>
               )}
             </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="register" className="animation-fade-in">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h3 className="text-lg font-medium mb-4">Register New Student</h3>
+            <StudentRegistrationForm onSuccess={handleRegistrationSuccess} />
           </div>
         </TabsContent>
       </Tabs>
