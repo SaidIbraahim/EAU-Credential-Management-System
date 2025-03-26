@@ -33,7 +33,7 @@ const Settings = () => {
                 <div className="flex flex-col items-center sm:items-start space-y-4">
                   <Avatar className="w-24 h-24">
                     <AvatarImage src="" />
-                    <AvatarFallback className="text-xl bg-primary-500 text-white">JD</AvatarFallback>
+                    <AvatarFallback className="text-xl bg-primary-500 text-white">SI</AvatarFallback>
                   </Avatar>
                   <Button variant="outline" size="sm">
                     Change Avatar
@@ -44,17 +44,17 @@ const Settings = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" defaultValue="John" />
+                      <Input id="firstName" defaultValue="Said" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" defaultValue="Doe" />
+                      <Input id="lastName" defaultValue="Ibrahim" />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                    <Input id="email" type="email" defaultValue="info@saidibrahim.tech" />
                   </div>
                   
                   <div className="space-y-2">
