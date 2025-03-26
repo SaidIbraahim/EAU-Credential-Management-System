@@ -1,23 +1,38 @@
 
+import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "../ui/form";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
 import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Control } from "react-hook-form";
-import { FormValues } from "./StudentRegistrationForm";
+import { FormValues } from "./formSchema";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+
+interface Department {
+  id: number;
+  name: string;
+  code: string;
+}
+
+interface AcademicYear {
+  id: number;
+  academic_year: string;
+}
 
 interface AcademicInfoFormProps {
   control: Control<FormValues>;
-  departments: { id: number; name: string; code: string }[];
-  academicYears: { id: number; academic_year: string }[];
+  departments: Department[];
+  academicYears: AcademicYear[];
 }
 
 const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoFormProps) => {
+  const currentYear = new Date().getFullYear();
+  const fromYear = currentYear - 20; // Allow selecting dates from 20 years ago
+  
   return (
     <>
       <FormField
@@ -26,22 +41,19 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
         render={({ field }) => (
           <FormItem>
             <FormLabel>Department *</FormLabel>
-            <Select 
-              onValueChange={field.onChange} 
-              defaultValue={field.value}
-            >
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select department" />
+                  <SelectValue placeholder="Select a department" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {departments.map((dept) => (
+                {departments.map((department) => (
                   <SelectItem 
-                    key={dept.id} 
-                    value={dept.id.toString()}
+                    key={department.id} 
+                    value={department.id.toString()}
                   >
-                    {dept.name}
+                    {department.name} ({department.code})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -57,10 +69,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
         render={({ field }) => (
           <FormItem>
             <FormLabel>Academic Year *</FormLabel>
-            <Select 
-              onValueChange={field.onChange} 
-              defaultValue={field.value}
-            >
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select academic year" />
@@ -92,18 +101,22 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
               <Input 
                 type="number" 
                 placeholder="3.5" 
-                {...field} 
-                step="0.01"
-                min="0"
+                step="0.1" 
+                min="0" 
                 max="4.0"
+                {...field} 
                 onChange={(e) => {
-                  const value = e.target.value;
-                  field.onChange(value === "" ? 0 : Number(value));
+                  const value = parseFloat(e.target.value);
+                  if (!isNaN(value) && value >= 0 && value <= 4) {
+                    field.onChange(value);
+                  } else if (e.target.value === '') {
+                    field.onChange(0);
+                  }
                 }}
               />
             </FormControl>
             <FormDescription>
-              Value between 0.0 and 4.0
+              Enter a value between 0.0 and 4.0
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -116,23 +129,9 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
         render={({ field }) => (
           <FormItem>
             <FormLabel>Grade</FormLabel>
-            <Select 
-              onValueChange={field.onChange} 
-              defaultValue={field.value}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select grade" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="A">A</SelectItem>
-                <SelectItem value="B">B</SelectItem>
-                <SelectItem value="C">C</SelectItem>
-                <SelectItem value="D">D</SelectItem>
-                <SelectItem value="F">F</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <Input placeholder="A, B, C, etc." {...field} />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -168,6 +167,9 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
                   mode="single"
                   selected={field.value}
                   onSelect={field.onChange}
+                  fromYear={fromYear}
+                  toYear={currentYear}
+                  captionLayout="dropdown-buttons"
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
@@ -206,9 +208,11 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={field.value || undefined}
+                  selected={field.value}
                   onSelect={field.onChange}
-                  initialFocus
+                  fromYear={fromYear}
+                  toYear={currentYear + 5} // Allow selecting future dates for graduation
+                  captionLayout="dropdown-buttons"
                   className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
@@ -222,22 +226,24 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
         control={control}
         name="status"
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="space-y-3">
             <FormLabel>Status *</FormLabel>
-            <Select 
-              onValueChange={field.onChange} 
-              defaultValue={field.value}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="cleared">Cleared</SelectItem>
-                <SelectItem value="un-cleared">Un-cleared</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                className="flex gap-6"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cleared" id="cleared" />
+                  <label htmlFor="cleared">Cleared</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="un-cleared" id="un-cleared" />
+                  <label htmlFor="un-cleared">Un-cleared</label>
+                </div>
+              </RadioGroup>
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}

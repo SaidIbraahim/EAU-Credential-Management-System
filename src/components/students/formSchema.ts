@@ -8,7 +8,7 @@ export const formSchema = z.object({
     .refine(id => /^[A-Za-z0-9-]+$/.test(id), {
       message: "Student ID can only contain letters, numbers, and hyphens"
     }),
-  certificate_id: z.string().optional(),
+  certificate_id: z.string().min(1, { message: "Certificate ID is required" }),
   gender: z.enum(["male", "female"]),
   phone_number: z.string().optional(),
   department_id: z.string(),

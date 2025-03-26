@@ -42,7 +42,7 @@ const DocumentsSection = ({ files, setFiles }: DocumentsSectionProps) => {
           files={files.photo}
           onAddFiles={(newFiles) => handleAddFiles('photo', newFiles)}
           onRemoveFile={(index) => handleRemoveFile('photo', index)}
-          accept="image/*"
+          required={true}
         />
         
         <DocumentUploader

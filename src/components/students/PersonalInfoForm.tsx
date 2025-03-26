@@ -3,7 +3,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "../ui/input";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Control } from "react-hook-form";
-import { FormValues } from "./StudentRegistrationForm";
+import { FormValues } from "./formSchema";
 
 interface PersonalInfoFormProps {
   control: Control<FormValues>;
@@ -48,7 +48,7 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
         name="certificate_id"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Certificate ID</FormLabel>
+            <FormLabel>Certificate ID *</FormLabel>
             <FormControl>
               <Input placeholder="CERT2023123" {...field} />
             </FormControl>
