@@ -43,7 +43,12 @@ interface StudentRegistrationFormProps {
 const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [files, setFiles] = useState<{ [key: string]: File[] }>({
+  const [files, setFiles] = useState<{
+    photo: File[];
+    transcript: File[];
+    certificate: File[];
+    supporting: File[];
+  }>({
     photo: [],
     transcript: [],
     certificate: [],
