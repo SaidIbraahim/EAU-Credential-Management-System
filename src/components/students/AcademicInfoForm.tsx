@@ -33,6 +33,23 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
   const currentYear = new Date().getFullYear();
   const fromYear = currentYear - 20; // Allow selecting dates from 20 years ago
   
+  // Grade options for the dropdown
+  const gradeOptions = [
+    { value: "A+", label: "A+" },
+    { value: "A", label: "A" },
+    { value: "A-", label: "A-" },
+    { value: "B+", label: "B+" },
+    { value: "B", label: "B" },
+    { value: "B-", label: "B-" },
+    { value: "C+", label: "C+" },
+    { value: "C", label: "C" },
+    { value: "C-", label: "C-" },
+    { value: "D+", label: "D+" },
+    { value: "D", label: "D" },
+    { value: "D-", label: "D-" },
+    { value: "F", label: "F" }
+  ];
+  
   return (
     <>
       <FormField
@@ -100,7 +117,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
             <FormControl>
               <Input 
                 type="number" 
-                placeholder="3.5" 
+                placeholder="" 
                 step="0.1" 
                 min="0" 
                 max="4.0"
@@ -129,9 +146,20 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
         render={({ field }) => (
           <FormItem>
             <FormLabel>Grade</FormLabel>
-            <FormControl>
-              <Input placeholder="A, B, C, etc." {...field} />
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a grade" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {gradeOptions.map((grade) => (
+                  <SelectItem key={grade.value} value={grade.value}>
+                    {grade.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
