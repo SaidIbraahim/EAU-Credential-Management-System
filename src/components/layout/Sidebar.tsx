@@ -8,7 +8,8 @@ import {
   LogOut, 
   ChevronLeft, 
   ChevronRight,
-  ClipboardList
+  ClipboardList,
+  BookOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,11 @@ export function Sidebar() {
       name: "Students", 
       path: "/students", 
       icon: <Users className="w-5 h-5" /> 
+    },
+    { 
+      name: "Academic Config", 
+      path: "/academic-configuration", 
+      icon: <BookOpen className="w-5 h-5" /> 
     },
     { 
       name: "Reports", 

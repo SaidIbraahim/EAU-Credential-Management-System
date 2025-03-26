@@ -14,6 +14,7 @@ import Reports from "./pages/Reports";
 import AuditLog from "./pages/AuditLog";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import AcademicConfiguration from "./pages/AcademicConfiguration";
 
 // Layout Components
 import Sidebar from "./components/layout/Sidebar";
@@ -73,6 +74,14 @@ const App = () => (
             element={
               <Layout>
                 <StudentDetail />
+              </Layout>
+            } 
+          />
+          <Route 
+            path="/academic-configuration" 
+            element={
+              <Layout>
+                <AcademicConfiguration />
               </Layout>
             } 
           />
