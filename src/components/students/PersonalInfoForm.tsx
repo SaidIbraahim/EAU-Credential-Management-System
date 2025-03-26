@@ -19,7 +19,7 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
           <FormItem>
             <FormLabel>Full Name *</FormLabel>
             <FormControl>
-              <Input placeholder="John Doe" {...field} />
+              <Input placeholder="Said Abdishakur Ibrahim" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -91,7 +91,7 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
           <FormItem>
             <FormLabel>Phone Number</FormLabel>
             <FormControl>
-              <Input placeholder="+1234567890" {...field} />
+              <Input placeholder="+252907845512" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
