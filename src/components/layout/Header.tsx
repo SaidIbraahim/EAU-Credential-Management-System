@@ -8,7 +8,7 @@ const Header = () => {
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6 animation-fade-in">
       <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-        Graduate Management System
+        Alumni Management System
       </h1>
       
       <div className="flex items-center space-x-4">
