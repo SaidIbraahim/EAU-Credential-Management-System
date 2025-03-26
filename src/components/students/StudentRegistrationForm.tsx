@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,7 +46,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
-// Sample data for dropdowns - in production this would come from API
 const DEPARTMENTS = [
   { id: 1, name: "Computer Science", code: "CS" },
   { id: 2, name: "Medicine", code: "MED" },

@@ -300,7 +300,7 @@ const MOCK_STUDENTS: Student[] = [
     grade: "B",
     admission_date: new Date("2020-09-01"),
     graduation_date: new Date("2024-06-30"),
-    status: "uncleared",
+    status: "un-cleared",
     created_at: new Date(),
     updated_at: new Date(),
   }

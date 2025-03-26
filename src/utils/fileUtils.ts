@@ -1,4 +1,3 @@
-
 import Papa from 'papaparse';
 import { Student } from '@/types';
 
@@ -64,7 +63,7 @@ export const parseCSV = (file: File): Promise<Student[]> => {
               grade: row['Grade']?.trim() || '',
               admission_date: row['Admission Date'] ? new Date(row['Admission Date']) : new Date(),
               graduation_date: row['Graduation Date'] ? new Date(row['Graduation Date']) : undefined,
-              status: (row['Status']?.toLowerCase() === 'cleared' ? 'cleared' : 'uncleared') as 'cleared' | 'uncleared',
+              status: (row['Status']?.toLowerCase() === 'cleared' ? 'cleared' : 'un-cleared') as 'cleared' | 'un-cleared',
               created_at: new Date(),
               updated_at: new Date(),
             };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -38,7 +37,7 @@ const StudentDetail = () => {
         gpa: 0,
         grade: '',
         admission_date: new Date(),
-        status: 'uncleared',
+        status: 'un-cleared',
         created_at: new Date(),
         updated_at: new Date()
       });
@@ -397,8 +396,8 @@ const StudentDetail = () => {
                       <input
                         type="radio"
                         name="status"
-                        value="uncleared"
-                        checked={student.status === 'uncleared'}
+                        value="un-cleared"
+                        checked={student.status === 'un-cleared'}
                         onChange={handleInputChange}
                         className="mr-2"
                       />
