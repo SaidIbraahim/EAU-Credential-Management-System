@@ -65,7 +65,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       phone_number: "",
       department_id: "",
       academic_year_id: "",
-      gpa: 0,
       grade: "",
       status: "un-cleared",
     }
@@ -101,7 +100,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         phone_number: values.phone_number || undefined,
         department: DEPARTMENTS.find(d => d.id.toString() === values.department_id)?.name || "",
         academic_year: ACADEMIC_YEARS.find(y => y.id.toString() === values.academic_year_id)?.academic_year || "",
-        gpa: values.gpa,
+        gpa: values.gpa || 0, // Handle empty GPA field
         grade: values.grade || "",
         admission_date: values.admission_date,
         graduation_date: values.graduation_date,

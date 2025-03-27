@@ -6,14 +6,14 @@ import { Search, Download, Upload, Filter, PlusCircle, AlertCircle } from "lucid
 import { Student } from "@/types";
 import { parseCSV, processZipFile, validateStudents } from "@/utils/fileUtils";
 import { studentsApi, auditLogApi } from "@/api/apiClient";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import StudentRegistrationForm from "@/components/students/StudentRegistrationForm";
 
 const Students = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("list");
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [zipFile, setZipFile] = useState<File | null>(null);
@@ -22,6 +22,24 @@ const Students = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [duplicates, setDuplicates] = useState<Student[]>([]);
+  
+  const queryParams = new URLSearchParams(location.search);
+  const tabFromUrl = queryParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "list");
+  
+  useEffect(() => {
+    if (activeTab !== "list") {
+      navigate(`/students?tab=${activeTab}`, { replace: true });
+    } else {
+      navigate('/students', { replace: true });
+    }
+  }, [activeTab, navigate]);
+  
+  useEffect(() => {
+    if (tabFromUrl && ["list", "import", "register"].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
   
   useEffect(() => {
     fetchStudents();

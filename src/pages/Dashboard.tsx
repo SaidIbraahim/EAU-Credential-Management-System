@@ -2,10 +2,13 @@
 import { Users, Building2, UserRound, UserRoundX, GraduationCap, Award, Trophy, BarChart3 } from "lucide-react";
 import StatsCard from "@/components/ui/StatsCard";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   // For the demo, we'll use mock data
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Simulate data loading
@@ -16,13 +19,21 @@ const Dashboard = () => {
     return () => clearTimeout(timer);
   }, []);
   
+  const handleRegisterStudent = () => {
+    navigate('/students?tab=register');
+  };
+  
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto w-full animation-fade-in">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-        <button className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+        <Button 
+          variant="default"
+          onClick={handleRegisterStudent}
+          className="flex items-center gap-2"
+        >
           <span>Register Student</span>
-        </button>
+        </Button>
       </div>
       
       {/* Stats Grid */}

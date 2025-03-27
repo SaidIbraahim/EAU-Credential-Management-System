@@ -33,20 +33,12 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
   const currentYear = new Date().getFullYear();
   const fromYear = currentYear - 20; // Allow selecting dates from 20 years ago
   
-  // Grade options for the dropdown
+  // Simplified grade options - only A through F without + or -
   const gradeOptions = [
-    { value: "A+", label: "A+" },
     { value: "A", label: "A" },
-    { value: "A-", label: "A-" },
-    { value: "B+", label: "B+" },
     { value: "B", label: "B" },
-    { value: "B-", label: "B-" },
-    { value: "C+", label: "C+" },
     { value: "C", label: "C" },
-    { value: "C-", label: "C-" },
-    { value: "D+", label: "D+" },
     { value: "D", label: "D" },
-    { value: "D-", label: "D-" },
     { value: "F", label: "F" }
   ];
   
@@ -111,23 +103,27 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
       <FormField
         control={control}
         name="gpa"
-        render={({ field }) => (
+        render={({ field: { value, onChange, ...field } }) => (
           <FormItem>
             <FormLabel>GPA *</FormLabel>
             <FormControl>
               <Input 
                 type="number" 
-                placeholder="" 
+                placeholder="Enter GPA (0.0-4.0)" 
                 step="0.1" 
                 min="0" 
                 max="4.0"
                 {...field} 
+                value={value === 0 ? "" : value}
                 onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  if (!isNaN(value) && value >= 0 && value <= 4) {
-                    field.onChange(value);
-                  } else if (e.target.value === '') {
-                    field.onChange(0);
+                  const inputValue = e.target.value;
+                  if (inputValue === '') {
+                    onChange(undefined); // Set to undefined when empty
+                  } else {
+                    const value = parseFloat(inputValue);
+                    if (!isNaN(value) && value >= 0 && value <= 4) {
+                      onChange(value);
+                    }
                   }
                 }}
               />
