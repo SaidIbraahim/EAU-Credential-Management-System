@@ -33,20 +33,12 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
   const currentYear = new Date().getFullYear();
   const fromYear = currentYear - 20; // Allow selecting dates from 20 years ago
   
-  // Grade options for the dropdown
+  // Simplified grade options - only A through F without + or -
   const gradeOptions = [
-    { value: "A+", label: "A+" },
     { value: "A", label: "A" },
-    { value: "A-", label: "A-" },
-    { value: "B+", label: "B+" },
     { value: "B", label: "B" },
-    { value: "B-", label: "B-" },
-    { value: "C+", label: "C+" },
     { value: "C", label: "C" },
-    { value: "C-", label: "C-" },
-    { value: "D+", label: "D+" },
     { value: "D", label: "D" },
-    { value: "D-", label: "D-" },
     { value: "F", label: "F" }
   ];
   
@@ -117,7 +109,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
             <FormControl>
               <Input 
                 type="number" 
-                placeholder="" 
+                placeholder="Enter GPA (0.0-4.0)" 
                 step="0.1" 
                 min="0" 
                 max="4.0"
