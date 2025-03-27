@@ -16,7 +16,9 @@ export const formSchema = z.object({
   gpa: z.coerce.number()
     .min(0, { message: "GPA must be at least 0" })
     .max(4.0, { message: "GPA must be no more than 4.0" })
-    .step(0.01, { message: "GPA can have up to 2 decimal places" }),
+    .step(0.01, { message: "GPA can have up to 2 decimal places" })
+    .optional()
+    .or(z.literal('')),
   grade: z.string().optional(),
   admission_date: z.date({
     required_error: "Admission date is required",

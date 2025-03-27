@@ -65,7 +65,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       phone_number: "",
       department_id: "",
       academic_year_id: "",
-      gpa: 0,
       grade: "",
       status: "un-cleared",
     }
@@ -101,7 +100,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         phone_number: values.phone_number || undefined,
         department: DEPARTMENTS.find(d => d.id.toString() === values.department_id)?.name || "",
         academic_year: ACADEMIC_YEARS.find(y => y.id.toString() === values.academic_year_id)?.academic_year || "",
-        gpa: values.gpa,
+        gpa: values.gpa || 0, // Handle empty GPA field
         grade: values.grade || "",
         admission_date: values.admission_date,
         graduation_date: values.graduation_date,
@@ -199,7 +198,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Processing...
                 </span>
               ) : (
                 <span className="flex items-center">
@@ -207,6 +205,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
                   Register Student
                 </span>
               )}
+              {isSubmitting ? "Processing..." : "Register Student"}
             </Button>
           </div>
         </form>
