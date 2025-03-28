@@ -207,6 +207,78 @@ const Students = () => {
     setIsFilterActive(false);
   };
   
+  const handleExportStudents = () => {
+    try {
+      // Create CSV content from students data
+      const headers = [
+        "Student ID", 
+        "Full Name", 
+        "Certificate ID", 
+        "Gender", 
+        "Phone Number",
+        "Department", 
+        "Academic Year", 
+        "GPA", 
+        "Grade",
+        "Admission Date", 
+        "Graduation Date", 
+        "Status"
+      ];
+      
+      // Get filtered students if filter is active, otherwise use all students
+      const dataToExport = isFilterActive ? filteredStudents : students;
+      
+      if (dataToExport.length === 0) {
+        toast.error("No students to export");
+        return;
+      }
+      
+      // Format the data
+      const csvRows = [
+        headers.join(','), // Add headers row
+        ...dataToExport.map(student => [
+          student.student_id,
+          `"${student.full_name}"`, // Quote names to handle commas in names
+          student.certificate_id || '',
+          student.gender,
+          student.phone_number || '',
+          `"${student.department}"`, // Quote department to handle commas
+          student.academic_year,
+          student.gpa,
+          student.grade,
+          student.admission_date ? new Date(student.admission_date).toISOString().split('T')[0] : '',
+          student.graduation_date ? new Date(student.graduation_date).toISOString().split('T')[0] : '',
+          student.status
+        ].join(','))
+      ];
+      
+      // Create a blob and download
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      
+      // Create filename with date
+      const date = new Date().toISOString().split('T')[0];
+      const filterInfo = isFilterActive ? '-filtered' : '';
+      link.setAttribute('download', `students-export${filterInfo}-${date}.csv`);
+      
+      // Programmatically click the link to trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Log the export action
+      auditLogApi.logAction("Export Students", `Exported ${dataToExport.length} student records to CSV`);
+      
+      toast.success(`Successfully exported ${dataToExport.length} students`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Error exporting students: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
+  };
+  
   const getGpaRangeFilter = (gpa: number, range: string) => {
     switch (range) {
       case "3.5-4.0":
@@ -318,136 +390,14 @@ const Students = () => {
                     </Select>
                   </div>
                   <div className="flex gap-2 w-full sm:w-auto justify-end">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="gap-2">
-                          <Filter className="h-4 w-4" />
-                          Filters
-                          {activeFilterCount > 0 && (
-                            <Badge className="ml-1" variant="secondary">{activeFilterCount}</Badge>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80 p-4" align="end">
-                        <div className="space-y-4">
-                          <h4 className="font-medium">Filter Students</h4>
-                          
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Department</label>
-                            <Select 
-                              value={filters.department} 
-                              onValueChange={(value) => handleFilterChange('department', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select department" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Any Department</SelectItem>
-                                {getUniqueValues('department').map((dept, index) => (
-                                  <SelectItem key={index} value={dept as string}>
-                                    {dept as string}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Academic Year</label>
-                            <Select 
-                              value={filters.academicYear} 
-                              onValueChange={(value) => handleFilterChange('academicYear', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select year" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Any Year</SelectItem>
-                                {getUniqueValues('academic_year').map((year, index) => (
-                                  <SelectItem key={index} value={year as string}>
-                                    {year as string}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Status</label>
-                            <Select 
-                              value={filters.status} 
-                              onValueChange={(value) => handleFilterChange('status', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Any Status</SelectItem>
-                                <SelectItem value="cleared">Cleared</SelectItem>
-                                <SelectItem value="un-cleared">Uncleared</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">GPA Range</label>
-                            <Select 
-                              value={filters.gpaRange} 
-                              onValueChange={(value) => handleFilterChange('gpaRange', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select GPA range" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Any GPA</SelectItem>
-                                <SelectItem value="3.5-4.0">3.5 - 4.0</SelectItem>
-                                <SelectItem value="3.0-3.5">3.0 - 3.5</SelectItem>
-                                <SelectItem value="2.5-3.0">2.5 - 3.0</SelectItem>
-                                <SelectItem value="2.0-2.5">2.0 - 2.5</SelectItem>
-                                <SelectItem value="below-2.0">Below 2.0</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium">Gender</label>
-                            <Select 
-                              value={filters.gender} 
-                              onValueChange={(value) => handleFilterChange('gender', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select gender" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">Any Gender</SelectItem>
-                                <SelectItem value="male">Male</SelectItem>
-                                <SelectItem value="female">Female</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          
-                          <div className="flex justify-between pt-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={clearFilters}
-                              className="text-xs"
-                            >
-                              Reset All
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              onClick={() => setIsFilterActive(true)}
-                              className="text-xs"
-                            >
-                              Apply Filters
-                            </Button>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
                     
-                    <Button variant="outline" size="icon">
+                    
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={handleExportStudents}
+                      title="Export students data"
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>

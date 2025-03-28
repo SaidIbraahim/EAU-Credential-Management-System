@@ -25,6 +25,11 @@ export const formSchema = z.object({
   }),
   graduation_date: z.date({
     required_error: "Graduation date is required",
+  }).refine(date => {
+    // Ensure graduation date is valid and not in the future
+    return date instanceof Date && !isNaN(date.getTime());
+  }, {
+    message: "Please provide a valid graduation date",
   }),
   status: z.enum(["cleared", "un-cleared"]),
 });
