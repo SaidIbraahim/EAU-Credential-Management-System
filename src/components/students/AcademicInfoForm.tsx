@@ -1,4 +1,3 @@
-
 import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "../ui/form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
@@ -141,7 +140,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
         name="grade"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Grade</FormLabel>
+            <FormLabel>Grade *</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
@@ -209,7 +208,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
         name="graduation_date"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>Graduation Date</FormLabel>
+            <FormLabel>Graduation Date *</FormLabel>
             <Popover>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -237,6 +236,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
                   fromYear={fromYear}
                   toYear={currentYear + 5} // Allow selecting future dates for graduation
                   captionLayout="dropdown-buttons"
+                  initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>

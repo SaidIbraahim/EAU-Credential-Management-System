@@ -19,11 +19,18 @@ export const formSchema = z.object({
     .step(0.01, { message: "GPA can have up to 2 decimal places" })
     .optional()
     .or(z.literal('')),
-  grade: z.string().optional(),
+  grade: z.string({ required_error: "Grade is required" }),
   admission_date: z.date({
     required_error: "Admission date is required",
   }),
-  graduation_date: z.date().optional(),
+  graduation_date: z.date({
+    required_error: "Graduation date is required",
+  }).refine(date => {
+    // Ensure graduation date is valid and not in the future
+    return date instanceof Date && !isNaN(date.getTime());
+  }, {
+    message: "Please provide a valid graduation date",
+  }),
   status: z.enum(["cleared", "un-cleared"]),
 });
 
