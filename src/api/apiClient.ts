@@ -133,6 +133,15 @@ export const documentsApi = {
       console.error(`Error fetching documents for student ${studentId}:`, error);
       throw error;
     }
+  },
+  
+  deleteDocument: async (documentId: string): Promise<void> => {
+    try {
+      console.log(`Deleting document ${documentId}`);
+    } catch (error) {
+      console.error(`Error deleting document ${documentId}:`, error);
+      throw error;
+    }
   }
 };
 

@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Save, Trash2, Upload, Download, User, Calendar, GraduationCap, 
-  BookOpen, Phone, Award, CheckCircle, AlertCircle, FileText, Edit, Eye
+  BookOpen, Phone, Award, CheckCircle, AlertCircle, FileText, Edit, Eye,
+  FileImage, File as FileIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,6 @@ const StudentDetail = () => {
     if (!isNewStudent && id) {
       fetchStudentData(id);
     } else {
-      // Initialize with empty student for new form
       setStudent({
         id: 0,
         student_id: '',
@@ -68,7 +67,6 @@ const StudentDetail = () => {
       const studentData = await studentsApi.getById(studentId);
       setStudent(studentData);
       
-      // Fetch documents
       const docs = await documentsApi.getByStudentId(studentId);
       setDocuments(docs);
     } catch (error) {
@@ -96,12 +94,10 @@ const StudentDetail = () => {
     setIsSaving(true);
     try {
       if (isNewStudent) {
-        // Create new student
         await studentsApi.create(student);
         auditLogApi.logAction("Student Added", `Added student '${student.full_name}' with ID '${student.student_id}'`);
         toast.success("Student created successfully");
       } else {
-        // Update existing student
         await studentsApi.update(id!, student);
         auditLogApi.logAction("Student Updated", `Updated information for student '${student.full_name}' with ID '${student.student_id}'`);
         toast.success("Student updated successfully");
@@ -192,7 +188,6 @@ const StudentDetail = () => {
   
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto w-full animation-fade-in">
-      {/* Header Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -262,7 +257,6 @@ const StudentDetail = () => {
         
         <TabsContent value="info" className="animation-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Personal Information */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -374,7 +368,6 @@ const StudentDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Academic Information */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -452,7 +445,6 @@ const StudentDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Academic Performance */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -513,7 +505,6 @@ const StudentDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Dates */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -633,7 +624,6 @@ const StudentDetail = () => {
             </Card>
           </div>
           
-          {/* Documents Section - Only show for existing students */}
           {!isNewStudent && (
             <Card className="mt-6">
               <CardHeader className="pb-3">
@@ -695,7 +685,7 @@ const StudentDetail = () => {
                                 </div>
                               ) : (
                                 <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                  <File className="h-5 w-5 text-purple-500" />
+                                  <FileIcon className="h-5 w-5 text-purple-500" />
                                 </div>
                               )}
                             </div>
@@ -743,7 +733,6 @@ const StudentDetail = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Document view modal */}
       <DocumentViewModal 
         open={isDocumentModalOpen} 
         onOpenChange={setIsDocumentModalOpen}
@@ -751,7 +740,6 @@ const StudentDetail = () => {
         onDeleteDocument={handleDeleteDocument}
       />
       
-      {/* Delete confirmation dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
