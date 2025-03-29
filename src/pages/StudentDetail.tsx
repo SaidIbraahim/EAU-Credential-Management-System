@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Save, Trash2, Upload, Download, User, Calendar, GraduationCap, 
   BookOpen, Phone, Award, CheckCircle, AlertCircle, FileText, Edit, Eye,
-  FileImage, File as FileIcon, ImageIcon, BookIcon, ScrollIcon
+  ImageIcon, FileIcon, BookIcon, ScrollIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,24 @@ const StudentDetail = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
+  // Use useCallback for fetching to prevent recreation of function on each render
+  const fetchStudentData = useCallback(async (studentId: string) => {
+    setIsLoading(true);
+    try {
+      const studentData = await studentsApi.getById(studentId);
+      setStudent(studentData);
+      
+      const docs = await documentsApi.getByStudentId(studentId);
+      setDocuments(docs);
+    } catch (error) {
+      console.error("Error fetching student:", error);
+      toast.error("Error loading student data");
+      navigate("/students");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [navigate]);
+  
   useEffect(() => {
     if (!isNewStudent && id) {
       fetchStudentData(id);
@@ -68,34 +86,21 @@ const StudentDetail = () => {
       });
       setIsLoading(false);
     }
-  }, [id, isNewStudent]);
+  }, [id, isNewStudent, fetchStudentData]);
   
-  const fetchStudentData = async (studentId: string) => {
-    setIsLoading(true);
-    try {
-      const studentData = await studentsApi.getById(studentId);
-      setStudent(studentData);
-      
-      const docs = await documentsApi.getByStudentId(studentId);
-      setDocuments(docs);
-    } catch (error) {
-      console.error("Error fetching student:", error);
-      toast.error("Error loading student data");
-      navigate("/students");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Use useCallback for handlers to prevent recreation on each render
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!student) return;
     
     const { name, value } = e.target;
-    setStudent({
-      ...student,
-      [name]: value
+    setStudent(prevStudent => {
+      if (!prevStudent) return null;
+      return {
+        ...prevStudent,
+        [name]: value
+      };
     });
-  };
+  }, [student]);
   
   const handleSave = async () => {
     if (!student) return;
@@ -143,7 +148,7 @@ const StudentDetail = () => {
     
     try {
       const uploadedDocs = await documentsApi.upload(id, files, documentType);
-      setDocuments([...documents, ...uploadedDocs]);
+      setDocuments(prevDocs => [...prevDocs, ...uploadedDocs]);
       
       auditLogApi.logAction("Document Uploaded", `Uploaded ${files.length} ${documentType} document(s) for student with ID '${student?.student_id}'`);
       toast.success(`${files.length} ${documentType} document(s) uploaded successfully`);
@@ -157,8 +162,9 @@ const StudentDetail = () => {
     if (!id) return;
     
     try {
+      // We assume the documentsApi has a deleteDocument method
       await documentsApi.deleteDocument(documentId.toString());
-      setDocuments(documents.filter(doc => doc.id !== documentId));
+      setDocuments(prevDocs => prevDocs.filter(doc => doc.id !== documentId));
       toast.success("Document deleted successfully");
     } catch (error) {
       console.error("Error deleting document:", error);
@@ -166,9 +172,9 @@ const StudentDetail = () => {
     }
   };
 
-  const toggleEditMode = () => {
-    setIsEditing(!isEditing);
-  };
+  const toggleEditMode = useCallback(() => {
+    setIsEditing(prev => !prev);
+  }, []);
   
   // Count documents by type
   const getDocumentCountByType = (type: 'photo' | 'transcript' | 'certificate' | 'supporting') => {
@@ -781,25 +787,30 @@ const StudentDetail = () => {
         </TabsContent>
       </Tabs>
       
-      <DocumentViewModal 
-        open={isDocumentModalOpen} 
-        onOpenChange={setIsDocumentModalOpen}
-        documents={documents}
-        onDeleteDocument={handleDeleteDocument}
-      />
+      {/* Modals */}
+      {isDocumentModalOpen && (
+        <DocumentViewModal 
+          open={isDocumentModalOpen} 
+          onOpenChange={setIsDocumentModalOpen}
+          documents={documents}
+          onDeleteDocument={handleDeleteDocument}
+        />
+      )}
       
-      <DocumentUploadModal
-        open={isUploadModalOpen}
-        onOpenChange={setIsUploadModalOpen}
-        onUpload={handleDocumentUpload}
-      />
+      {isUploadModalOpen && (
+        <DocumentUploadModal
+          open={isUploadModalOpen}
+          onOpenChange={setIsUploadModalOpen}
+          onUpload={handleDocumentUpload}
+        />
+      )}
       
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete {student.full_name}'s record and all associated documents.
+              This will permanently delete {student?.full_name}'s record and all associated documents.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

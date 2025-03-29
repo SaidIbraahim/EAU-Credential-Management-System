@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -25,6 +25,14 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
   const [documentType, setDocumentType] = useState<'photo' | 'transcript' | 'certificate' | 'supporting'>('supporting');
   const [isUploading, setIsUploading] = useState(false);
 
+  // Reset state when modal opens
+  useEffect(() => {
+    if (open) {
+      setFiles([]);
+      setIsUploading(false);
+    }
+  }, [open]);
+
   const handleAddFiles = (newFiles: File[]) => {
     setFiles(prevFiles => [...prevFiles, ...newFiles]);
   };
@@ -39,19 +47,25 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
     setIsUploading(true);
     try {
       await onUpload(files, documentType);
+      // Only update state if the component is still mounted
       setFiles([]);
       onOpenChange(false);
     } catch (error) {
       console.error("Error uploading documents:", error);
     } finally {
-      setIsUploading(false);
+      // Only update state if necessary
+      if (open) {
+        setIsUploading(false);
+      }
     }
   };
 
+  // Improved dialog close handler with cleanup
   const handleDialogClose = (open: boolean) => {
     if (!open) {
       // Reset state when dialog closes
       setFiles([]);
+      setIsUploading(false);
     }
     onOpenChange(open);
   };
