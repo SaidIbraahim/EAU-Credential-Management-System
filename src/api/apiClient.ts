@@ -1,7 +1,23 @@
+
 import { Student, Document, AuditLog, User } from '@/types';
 import { toast } from "sonner";
 
 const API_BASE_URL = '/api';
+
+// Store object URLs to properly clean them up
+const objectUrlStore: string[] = [];
+
+// Function to revoke all object URLs to prevent memory leaks
+export const revokeAllObjectUrls = () => {
+  objectUrlStore.forEach(url => {
+    try {
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error revoking object URL:", error);
+    }
+  });
+  objectUrlStore.length = 0; // Clear the array
+};
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
@@ -110,16 +126,29 @@ export const documentsApi = {
   upload: async (studentId: string, files: File[], documentType: 'photo' | 'transcript' | 'certificate' | 'supporting' = 'supporting'): Promise<Document[]> => {
     try {
       console.log(`Uploading ${files.length} files for student ${studentId} as ${documentType}`);
-      return files.map((file, index) => ({
-        id: Math.floor(Math.random() * 1000) + index,
-        student_id: parseInt(studentId),
-        document_type: documentType,
-        file_name: file.name,
-        file_size: file.size,
-        file_type: file.type,
-        file_url: URL.createObjectURL(file),
-        upload_date: new Date()
-      }));
+      
+      // Create Document objects for the uploaded files
+      const documents = files.map((file, index) => {
+        // Create object URL for the file and store it for later cleanup
+        const objectUrl = URL.createObjectURL(file);
+        objectUrlStore.push(objectUrl);
+        
+        return {
+          id: Math.floor(Math.random() * 1000) + index,
+          student_id: parseInt(studentId),
+          document_type: documentType,
+          file_name: file.name,
+          file_size: file.size,
+          file_type: file.type,
+          file_url: objectUrl,
+          upload_date: new Date()
+        };
+      });
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return documents;
     } catch (error) {
       console.error(`Error uploading documents for student ${studentId}:`, error);
       throw error;
@@ -128,6 +157,7 @@ export const documentsApi = {
   
   getByStudentId: async (studentId: string): Promise<Document[]> => {
     try {
+      // In a real implementation, we would fetch documents from the server
       return [];
     } catch (error) {
       console.error(`Error fetching documents for student ${studentId}:`, error);
@@ -138,6 +168,7 @@ export const documentsApi = {
   deleteDocument: async (documentId: string): Promise<void> => {
     try {
       console.log(`Deleting document ${documentId}`);
+      // In a real implementation, we would delete the document from the server
     } catch (error) {
       console.error(`Error deleting document ${documentId}:`, error);
       throw error;

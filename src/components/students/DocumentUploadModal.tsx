@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -25,21 +25,25 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
   const [documentType, setDocumentType] = useState<'photo' | 'transcript' | 'certificate' | 'supporting'>('supporting');
   const [isUploading, setIsUploading] = useState(false);
 
-  // Reset state when modal opens
+  // Reset state when modal opens or closes
   useEffect(() => {
     if (open) {
       setFiles([]);
+      setDocumentType('supporting');
       setIsUploading(false);
+    } else {
+      // Clear files when modal closes to prevent memory issues
+      setFiles([]);
     }
   }, [open]);
 
-  const handleAddFiles = (newFiles: File[]) => {
+  const handleAddFiles = useCallback((newFiles: File[]) => {
     setFiles(prevFiles => [...prevFiles, ...newFiles]);
-  };
+  }, []);
 
-  const handleRemoveFile = (index: number) => {
+  const handleRemoveFile = useCallback((index: number) => {
     setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
-  };
+  }, []);
 
   const handleUpload = async () => {
     if (files.length === 0) return;
@@ -47,27 +51,25 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
     setIsUploading(true);
     try {
       await onUpload(files, documentType);
-      // Only update state if the component is still mounted
-      setFiles([]);
+      // Only close the modal if upload was successful
       onOpenChange(false);
     } catch (error) {
       console.error("Error uploading documents:", error);
     } finally {
-      // Only update state if necessary
-      if (open) {
-        setIsUploading(false);
-      }
+      setIsUploading(false);
     }
   };
 
-  // Improved dialog close handler with cleanup
+  // Safe dialog close handler
   const handleDialogClose = (open: boolean) => {
-    if (!open) {
-      // Reset state when dialog closes
-      setFiles([]);
-      setIsUploading(false);
+    if (!open && !isUploading) {
+      onOpenChange(open);
+    } else if (!open && isUploading) {
+      // Prevent closing while uploading
+      return;
+    } else {
+      onOpenChange(open);
     }
-    onOpenChange(open);
   };
 
   const getDocumentTypeTitle = () => {
@@ -127,9 +129,17 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
         </div>
         
         <DialogFooter className="flex items-center justify-between mt-4">
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              if (!isUploading) {
+                onOpenChange(false);
+              }
+            }}
+            disabled={isUploading}
+          >
+            Cancel
+          </Button>
           <Button 
             onClick={handleUpload} 
             disabled={files.length === 0 || isUploading}
@@ -143,4 +153,4 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
   );
 };
 
-export default DocumentUploadModal;
+export default React.memo(DocumentUploadModal);

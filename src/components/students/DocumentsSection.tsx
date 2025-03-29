@@ -1,5 +1,5 @@
 
-import React, { memo } from "react";
+import React, { memo, useCallback } from "react";
 import DocumentUploader from "./DocumentUploader";
 
 interface DocumentsSectionProps {
@@ -19,19 +19,19 @@ interface DocumentsSectionProps {
 
 // Memoize the DocumentsSection component to prevent unnecessary re-renders
 const DocumentsSection = memo(({ files, setFiles }: DocumentsSectionProps) => {
-  const handleAddFiles = (type: 'photo' | 'transcript' | 'certificate' | 'supporting', newFiles: File[]) => {
+  const handleAddFiles = useCallback((type: 'photo' | 'transcript' | 'certificate' | 'supporting', newFiles: File[]) => {
     setFiles(prev => ({
       ...prev,
       [type]: [...prev[type], ...newFiles]
     }));
-  };
+  }, [setFiles]);
 
-  const handleRemoveFile = (type: 'photo' | 'transcript' | 'certificate' | 'supporting', index: number) => {
+  const handleRemoveFile = useCallback((type: 'photo' | 'transcript' | 'certificate' | 'supporting', index: number) => {
     setFiles(prev => ({
       ...prev,
       [type]: prev[type].filter((_, i) => i !== index)
     }));
-  };
+  }, [setFiles]);
 
   return (
     <div className="space-y-4">
