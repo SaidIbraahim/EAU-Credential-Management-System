@@ -13,14 +13,18 @@ import { toast } from "sonner";
 import { Student, Document } from "@/types";
 import { studentsApi, documentsApi, auditLogApi } from "@/api/apiClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DocumentViewModal from "@/components/students/DocumentViewModal";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const StudentDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +36,8 @@ const StudentDetail = () => {
   const [student, setStudent] = useState<Student | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isEditing, setIsEditing] = useState(isNewStudent);
+  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
     if (!isNewStudent && id) {
@@ -116,16 +122,14 @@ const StudentDetail = () => {
   const handleDelete = async () => {
     if (!student || !id) return;
     
-    if (window.confirm(`Are you sure you want to delete ${student.full_name}?`)) {
-      try {
-        await studentsApi.delete(id);
-        auditLogApi.logAction("Student Deleted", `Removed student '${student.full_name}' with ID '${student.student_id}'`);
-        toast.success("Student deleted successfully");
-        navigate("/students");
-      } catch (error) {
-        console.error("Error deleting student:", error);
-        toast.error("Error deleting student");
-      }
+    try {
+      await studentsApi.delete(id);
+      auditLogApi.logAction("Student Deleted", `Removed student '${student.full_name}' with ID '${student.student_id}'`);
+      toast.success("Student deleted successfully");
+      navigate("/students");
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast.error("Error deleting student");
     }
   };
   
@@ -143,6 +147,19 @@ const StudentDetail = () => {
     } catch (error) {
       console.error("Error uploading files:", error);
       toast.error("Error uploading documents");
+    }
+  };
+
+  const handleDeleteDocument = async (documentId: number) => {
+    if (!id) return;
+    
+    try {
+      await documentsApi.deleteDocument(documentId.toString());
+      setDocuments(documents.filter(doc => doc.id !== documentId));
+      toast.success("Document deleted successfully");
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      toast.error("Error deleting document");
     }
   };
 
@@ -211,7 +228,10 @@ const StudentDetail = () => {
               </Button>
             )}
             {!isNewStudent && (
-              <Button variant="destructive" onClick={handleDelete}>
+              <Button 
+                variant="destructive" 
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>
@@ -236,9 +256,8 @@ const StudentDetail = () => {
       </div>
       
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-1 mb-6">
           <TabsTrigger value="info">Student Information</TabsTrigger>
-          <TabsTrigger value="documents" disabled={isNewStudent}>Documents</TabsTrigger>
         </TabsList>
         
         <TabsContent value="info" className="animation-fade-in">
@@ -613,95 +632,143 @@ const StudentDetail = () => {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="documents" className="animation-fade-in">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary-500" />
-                Student Documents
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-6">
-                <p className="text-sm text-gray-500 mb-4">
-                  Upload and manage documents for this student.
-                </p>
-                
-                <div className="flex items-center mb-6">
-                  <label className="flex items-center">
-                    <span className="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-primary-600 transition-colors">
-                      <Upload className="w-4 h-4 mr-2 inline-block" />
-                      Upload Documents
-                    </span>
-                    <input
-                      type="file"
-                      multiple
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                
-                {documents.length > 0 ? (
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>File Name</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Size</TableHead>
-                          <TableHead>Upload Date</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {documents.map((doc) => (
-                          <TableRow key={doc.id}>
-                            <TableCell className="font-medium">{doc.file_name}</TableCell>
-                            <TableCell>
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {doc.document_type}
-                              </span>
-                            </TableCell>
-                            <TableCell>{(doc.file_size / 1024).toFixed(2)} KB</TableCell>
-                            <TableCell>{new Date(doc.upload_date).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View
-                                  </a>
-                                </Button>
-                                <Button variant="outline" size="sm" asChild>
-                                  <a href={doc.file_url} download={doc.file_name}>
-                                    <Download className="h-4 w-4 mr-1" />
-                                    Download
-                                  </a>
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <div className="p-8 flex items-center justify-center border border-dashed border-gray-300 rounded-lg">
-                    <div className="text-center">
-                      <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500 mb-2">No documents found</p>
-                      <p className="text-sm text-gray-400">Upload documents for this student</p>
+          
+          {/* Documents Section - Only show for existing students */}
+          {!isNewStudent && (
+            <Card className="mt-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary-500" />
+                  Student Documents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-base font-medium">Documents and Attachments</h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {documents.length} document{documents.length !== 1 ? 's' : ''} uploaded
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsDocumentModalOpen(true)}
+                        className="bg-white"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View All
+                      </Button>
+                      <label className="flex items-center">
+                        <span className="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-primary-600 transition-colors">
+                          <Upload className="w-4 h-4 mr-2 inline-block" />
+                          Upload
+                        </span>
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  
+                  {documents.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {documents.slice(0, 3).map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="flex items-center space-x-3 truncate">
+                            <div className="flex-shrink-0">
+                              {doc.document_type === 'photo' ? (
+                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                  <FileImage className="h-5 w-5 text-blue-500" />
+                                </div>
+                              ) : doc.document_type === 'certificate' ? (
+                                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                  <Award className="h-5 w-5 text-green-500" />
+                                </div>
+                              ) : doc.document_type === 'transcript' ? (
+                                <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                                  <FileText className="h-5 w-5 text-amber-500" />
+                                </div>
+                              ) : (
+                                <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                  <File className="h-5 w-5 text-purple-500" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {doc.file_name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {(doc.file_size / 1024).toFixed(2)} KB • {new Date(doc.upload_date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <a 
+                            href={doc.file_url} 
+                            download={doc.file_name}
+                            className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-500"
+                          >
+                            <Download className="h-5 w-5" />
+                          </a>
+                        </div>
+                      ))}
+                      
+                      {documents.length > 3 && (
+                        <div 
+                          className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 border-dashed cursor-pointer hover:bg-gray-50"
+                          onClick={() => setIsDocumentModalOpen(true)}
+                        >
+                          <span className="text-primary-500 font-medium">
+                            +{documents.length - 3} more documents
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6">
+                      <FileText className="h-12 w-12 text-gray-300 mb-3" />
+                      <p className="text-gray-500 mb-2">No documents uploaded yet</p>
+                      <p className="text-sm text-gray-400">Upload student documents using the button above</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
+      
+      {/* Document view modal */}
+      <DocumentViewModal 
+        open={isDocumentModalOpen} 
+        onOpenChange={setIsDocumentModalOpen}
+        documents={documents}
+        onDeleteDocument={handleDeleteDocument}
+      />
+      
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {student.full_name}'s record and all associated documents.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600 text-white">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
