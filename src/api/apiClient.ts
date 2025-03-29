@@ -107,13 +107,13 @@ export const studentsApi = {
 };
 
 export const documentsApi = {
-  upload: async (studentId: string, files: File[]): Promise<Document[]> => {
+  upload: async (studentId: string, files: File[], documentType: 'photo' | 'transcript' | 'certificate' | 'supporting' = 'supporting'): Promise<Document[]> => {
     try {
-      console.log(`Uploading ${files.length} files for student ${studentId}`);
+      console.log(`Uploading ${files.length} files for student ${studentId} as ${documentType}`);
       return files.map((file, index) => ({
         id: Math.floor(Math.random() * 1000) + index,
         student_id: parseInt(studentId),
-        document_type: file.type.includes('image') ? 'photo' : 'supporting',
+        document_type: documentType,
         file_name: file.name,
         file_size: file.size,
         file_type: file.type,

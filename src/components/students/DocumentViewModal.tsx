@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Document } from "@/types";
-import { Eye, Download, Trash2, FileText, FileImage, File as FileIcon } from "lucide-react";
+import { Eye, Download, Trash2, FileText, FileImage, File as FileIcon, ImageIcon, ScrollIcon, Award } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface DocumentViewModalProps {
   open: boolean;
@@ -33,16 +40,44 @@ const DocumentViewModal = ({
   documents, 
   onDeleteDocument 
 }: DocumentViewModalProps) => {
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
   
-  const getFileIcon = (fileType: string) => {
-    if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('jpeg') || fileType.includes('png')) {
-      return <FileImage className="h-4 w-4 mr-2 text-blue-500" />;
-    } else if (fileType.includes('pdf')) {
-      return <FileIcon className="h-4 w-4 mr-2 text-red-500" />;
-    } else {
-      return <FileText className="h-4 w-4 mr-2 text-gray-500" />;
+  const getFilteredDocuments = () => {
+    if (!activeFilter) return documents;
+    return documents.filter(doc => doc.document_type === activeFilter);
+  };
+  
+  const getDocumentTypeIcon = (fileType: string, documentType: string) => {
+    switch (documentType) {
+      case 'photo':
+        return <ImageIcon className="h-4 w-4 mr-2 text-blue-500" />;
+      case 'transcript':
+        return <ScrollIcon className="h-4 w-4 mr-2 text-amber-500" />;
+      case 'certificate':
+        return <Award className="h-4 w-4 mr-2 text-green-500" />;
+      case 'supporting':
+      default:
+        if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('jpeg') || fileType.includes('png')) {
+          return <FileImage className="h-4 w-4 mr-2 text-blue-500" />;
+        } else if (fileType.includes('pdf')) {
+          return <FileIcon className="h-4 w-4 mr-2 text-red-500" />;
+        } else {
+          return <FileText className="h-4 w-4 mr-2 text-gray-500" />;
+        }
     }
   };
+
+  const getDocumentTypeColor = (type: string) => {
+    switch (type) {
+      case 'photo': return "bg-blue-100 text-blue-800";
+      case 'transcript': return "bg-amber-100 text-amber-800";
+      case 'certificate': return "bg-green-100 text-green-800";
+      case 'supporting': return "bg-purple-100 text-purple-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const filteredDocuments = getFilteredDocuments();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,7 +89,51 @@ const DocumentViewModal = ({
           </DialogDescription>
         </DialogHeader>
         
-        {documents.length > 0 ? (
+        <div className="flex items-center justify-between mb-4">
+          <div className="space-x-2">
+            <Button 
+              variant={activeFilter === null ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setActiveFilter(null)}
+            >
+              All ({documents.length})
+            </Button>
+            <Button 
+              variant={activeFilter === 'photo' ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setActiveFilter('photo')}
+            >
+              <ImageIcon className="h-4 w-4 mr-1" />
+              Photos
+            </Button>
+            <Button 
+              variant={activeFilter === 'transcript' ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setActiveFilter('transcript')}
+            >
+              <ScrollIcon className="h-4 w-4 mr-1" />
+              Transcripts
+            </Button>
+            <Button 
+              variant={activeFilter === 'certificate' ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setActiveFilter('certificate')}
+            >
+              <Award className="h-4 w-4 mr-1" />
+              Certificates
+            </Button>
+            <Button 
+              variant={activeFilter === 'supporting' ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setActiveFilter('supporting')}
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Supporting
+            </Button>
+          </div>
+        </div>
+        
+        {filteredDocuments.length > 0 ? (
           <div className="border rounded-lg overflow-hidden">
             <Table>
               <TableHeader>
@@ -67,47 +146,55 @@ const DocumentViewModal = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents.map((doc) => (
+                {filteredDocuments.map((doc) => (
                   <TableRow key={doc.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center">
-                        {getFileIcon(doc.file_type || '')}
-                        {doc.file_name}
+                        {getDocumentTypeIcon(doc.file_type || '', doc.document_type)}
+                        <span className="truncate max-w-[200px]">{doc.file_name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDocumentTypeColor(doc.document_type)}`}>
                         {doc.document_type}
                       </span>
                     </TableCell>
                     <TableCell>{(doc.file_size / 1024).toFixed(2)} KB</TableCell>
                     <TableCell>{new Date(doc.upload_date).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </a>
-                        </Button>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={doc.file_url} download={doc.file_name}>
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
-                          </a>
-                        </Button>
-                        {onDeleteDocument && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => onDeleteDocument(doc.id)}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            Actions
                           </Button>
-                        )}
-                      </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                              <Eye className="h-4 w-4 mr-2" />
+                              View
+                            </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <a href={doc.file_url} download={doc.file_name}>
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </a>
+                          </DropdownMenuItem>
+                          {onDeleteDocument && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => onDeleteDocument(doc.id)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -119,7 +206,9 @@ const DocumentViewModal = ({
             <div className="text-center">
               <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 mb-2">No documents found</p>
-              <p className="text-sm text-gray-400">Upload documents for this student</p>
+              <p className="text-sm text-gray-400">
+                {activeFilter ? `No ${activeFilter} documents found` : 'Upload documents for this student'}
+              </p>
             </div>
           </div>
         )}

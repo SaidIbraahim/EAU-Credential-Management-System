@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Save, Trash2, Upload, Download, User, Calendar, GraduationCap, 
   BookOpen, Phone, Award, CheckCircle, AlertCircle, FileText, Edit, Eye,
-  FileImage, File as FileIcon
+  FileImage, File as FileIcon, ImageIcon, BookIcon, ScrollIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { Student, Document } from "@/types";
 import { studentsApi, documentsApi, auditLogApi } from "@/api/apiClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DocumentViewModal from "@/components/students/DocumentViewModal";
+import DocumentUploadModal from "@/components/students/DocumentUploadModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +27,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const StudentDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +45,7 @@ const StudentDetail = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isEditing, setIsEditing] = useState(isNewStudent);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
@@ -129,17 +138,15 @@ const StudentDetail = () => {
     }
   };
   
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!id || isNewStudent || !e.target.files || e.target.files.length === 0) return;
-    
-    const files = Array.from(e.target.files);
+  const handleDocumentUpload = async (files: File[], documentType: 'photo' | 'transcript' | 'certificate' | 'supporting') => {
+    if (!id || isNewStudent || files.length === 0) return;
     
     try {
-      const uploadedDocs = await documentsApi.upload(id, files);
+      const uploadedDocs = await documentsApi.upload(id, files, documentType);
       setDocuments([...documents, ...uploadedDocs]);
       
-      auditLogApi.logAction("Document Uploaded", `Uploaded ${files.length} document(s) for student with ID '${student?.student_id}'`);
-      toast.success(`${files.length} document(s) uploaded successfully`);
+      auditLogApi.logAction("Document Uploaded", `Uploaded ${files.length} ${documentType} document(s) for student with ID '${student?.student_id}'`);
+      toast.success(`${files.length} ${documentType} document(s) uploaded successfully`);
     } catch (error) {
       console.error("Error uploading files:", error);
       toast.error("Error uploading documents");
@@ -161,6 +168,26 @@ const StudentDetail = () => {
 
   const toggleEditMode = () => {
     setIsEditing(!isEditing);
+  };
+  
+  // Count documents by type
+  const getDocumentCountByType = (type: 'photo' | 'transcript' | 'certificate' | 'supporting') => {
+    return documents.filter(doc => doc.document_type === type).length;
+  };
+
+  // Get document type icon
+  const getDocumentTypeIcon = (type: string) => {
+    switch (type) {
+      case 'photo':
+        return <ImageIcon className="h-5 w-5 text-blue-500" />;
+      case 'transcript':
+        return <ScrollIcon className="h-5 w-5 text-amber-500" />;
+      case 'certificate':
+        return <Award className="h-5 w-5 text-green-500" />;
+      case 'supporting':
+      default:
+        return <FileIcon className="h-5 w-5 text-purple-500" />;
+    }
   };
   
   if (isLoading) {
@@ -650,74 +677,95 @@ const StudentDetail = () => {
                         <Eye className="h-4 w-4 mr-2" />
                         View All
                       </Button>
-                      <label className="flex items-center">
-                        <span className="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-primary-600 transition-colors">
-                          <Upload className="w-4 h-4 mr-2 inline-block" />
-                          Upload
-                        </span>
-                        <input
-                          type="file"
-                          multiple
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                      </label>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button className="bg-primary-500 hover:bg-primary-600 text-white">
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setIsUploadModalOpen(true)}>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload with Type Selection
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   
                   {documents.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {documents.slice(0, 3).map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-center space-x-3 truncate">
-                            <div className="flex-shrink-0">
-                              {doc.document_type === 'photo' ? (
-                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <FileImage className="h-5 w-5 text-blue-500" />
-                                </div>
-                              ) : doc.document_type === 'certificate' ? (
-                                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                  <Award className="h-5 w-5 text-green-500" />
-                                </div>
-                              ) : doc.document_type === 'transcript' ? (
-                                <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                                  <FileText className="h-5 w-5 text-amber-500" />
-                                </div>
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                  <FileIcon className="h-5 w-5 text-purple-500" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {doc.file_name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {(doc.file_size / 1024).toFixed(2)} KB • {new Date(doc.upload_date).toLocaleDateString()}
-                              </p>
-                            </div>
+                    <div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                        <div className="flex flex-col items-center p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+                            <ImageIcon className="h-5 w-5 text-blue-500" />
                           </div>
-                          <a 
-                            href={doc.file_url} 
-                            download={doc.file_name}
-                            className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-500"
-                          >
-                            <Download className="h-5 w-5" />
-                          </a>
+                          <p className="text-sm font-medium">Photos</p>
+                          <p className="text-lg font-bold">{getDocumentCountByType('photo')}</p>
                         </div>
-                      ))}
+                        <div className="flex flex-col items-center p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center mb-2">
+                            <ScrollIcon className="h-5 w-5 text-amber-500" />
+                          </div>
+                          <p className="text-sm font-medium">Transcripts</p>
+                          <p className="text-lg font-bold">{getDocumentCountByType('transcript')}</p>
+                        </div>
+                        <div className="flex flex-col items-center p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mb-2">
+                            <Award className="h-5 w-5 text-green-500" />
+                          </div>
+                          <p className="text-sm font-medium">Certificates</p>
+                          <p className="text-lg font-bold">{getDocumentCountByType('certificate')}</p>
+                        </div>
+                        <div className="flex flex-col items-center p-3 bg-white rounded-lg border border-gray-200">
+                          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                            <FileIcon className="h-5 w-5 text-purple-500" />
+                          </div>
+                          <p className="text-sm font-medium">Supporting</p>
+                          <p className="text-lg font-bold">{getDocumentCountByType('supporting')}</p>
+                        </div>
+                      </div>
                       
-                      {documents.length > 3 && (
-                        <div 
-                          className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 border-dashed cursor-pointer hover:bg-gray-50"
-                          onClick={() => setIsDocumentModalOpen(true)}
-                        >
-                          <span className="text-primary-500 font-medium">
-                            +{documents.length - 3} more documents
-                          </span>
-                        </div>
-                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {documents.slice(0, 3).map((doc) => (
+                          <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                            <div className="flex items-center space-x-3 truncate">
+                              <div className="flex-shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                  {getDocumentTypeIcon(doc.document_type)}
+                                </div>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-medium text-gray-900 truncate">
+                                  {doc.file_name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {(doc.file_size / 1024).toFixed(2)} KB • {new Date(doc.upload_date).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <a 
+                              href={doc.file_url} 
+                              download={doc.file_name}
+                              className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-500"
+                            >
+                              <Download className="h-5 w-5" />
+                            </a>
+                          </div>
+                        ))}
+                        
+                        {documents.length > 3 && (
+                          <div 
+                            className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 border-dashed cursor-pointer hover:bg-gray-50"
+                            onClick={() => setIsDocumentModalOpen(true)}
+                          >
+                            <span className="text-primary-500 font-medium">
+                              +{documents.length - 3} more documents
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-6">
@@ -738,6 +786,12 @@ const StudentDetail = () => {
         onOpenChange={setIsDocumentModalOpen}
         documents={documents}
         onDeleteDocument={handleDeleteDocument}
+      />
+      
+      <DocumentUploadModal
+        open={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        onUpload={handleDocumentUpload}
       />
       
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
