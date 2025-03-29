@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Document } from "@/types";
-import { Eye, Download, Trash2, FileText, FileImage, File } from "lucide-react";
+import { Eye, Download, Trash2, FileText, FileImage, File as FileIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ const DocumentViewModal = ({
     if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('jpeg') || fileType.includes('png')) {
       return <FileImage className="h-4 w-4 mr-2 text-blue-500" />;
     } else if (fileType.includes('pdf')) {
-      return <File className="h-4 w-4 mr-2 text-red-500" />;
+      return <FileIcon className="h-4 w-4 mr-2 text-red-500" />;
     } else {
       return <FileText className="h-4 w-4 mr-2 text-gray-500" />;
     }
