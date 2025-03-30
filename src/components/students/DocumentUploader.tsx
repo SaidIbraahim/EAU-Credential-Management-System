@@ -27,10 +27,11 @@ const DocumentUploader = ({
       case 'photo':
         return ".jpg,.jpeg,.png";
       case 'transcript':
+        return ".pdf";
       case 'certificate':
         return ".pdf";
       case 'supporting':
-        return ".pdf,.doc,.docx,.jpg,.jpeg,.png";
+        return ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png";
       default:
         return ".pdf,.doc,.docx,.jpg,.jpeg,.png";
     }
@@ -41,10 +42,11 @@ const DocumentUploader = ({
       case 'photo':
         return "JPG, JPEG, PNG";
       case 'transcript':
+        return "PDF only";
       case 'certificate':
         return "PDF only";
       case 'supporting':
-        return "PDF, DOC, DOCX, JPG, JPEG, PNG";
+        return "PDF, DOC, DOCX, Excel, JPG, JPEG, PNG";
       default:
         return "";
     }

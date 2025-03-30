@@ -71,19 +71,19 @@ const DocumentUploadModal = ({
       type: 'transcript',
       title: 'Transcripts',
       description: 'Upload academic transcripts',
-      accept: ['.pdf', '.doc', '.docx'],
+      accept: ['.pdf'],
     },
     {
       type: 'certificate',
       title: 'Certificates',
       description: 'Upload graduation certificates or awards',
-      accept: ['.pdf', '.jpg', '.jpeg', '.png'],
+      accept: ['.pdf'],
     },
     {
       type: 'supporting',
       title: 'Supporting Documents',
       description: 'Upload any additional supporting documents',
-      accept: ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'],
+      accept: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'],
     },
   ];
   

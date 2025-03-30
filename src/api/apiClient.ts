@@ -126,7 +126,22 @@ export const documentsApi = {
     try {
       const uploadedDocs: Document[] = [];
       
+      // Validate file types based on document type
+      const allowedTypes: { [key: string]: string[] } = {
+        photo: ['.jpg', '.jpeg', '.png'],
+        transcript: ['.pdf'],
+        certificate: ['.pdf'],
+        supporting: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png']
+      };
+      
       for (const file of files) {
+        const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+        const isValidType = allowedTypes[documentType].some(type => type === extension);
+        
+        if (!isValidType) {
+          throw new Error(`Invalid file type for ${documentType}. Allowed types: ${allowedTypes[documentType].join(', ')}`);
+        }
+        
         const objectUrl = URL.createObjectURL(file);
         objectUrls.push(objectUrl); // Track URLs for cleanup
         
@@ -142,11 +157,6 @@ export const documentsApi = {
         };
         
         uploadedDocs.push(newDoc);
-        
-        // In a real implementation, we would have:
-        // 1. Create a FormData object
-        // 2. Append the file and metadata
-        // 3. Send a POST request to the server
       }
       
       return uploadedDocs;
