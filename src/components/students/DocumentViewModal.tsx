@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface DocumentViewModalProps {
   open: boolean;
@@ -44,6 +45,7 @@ const DocumentViewModal = ({
 }: DocumentViewModalProps) => {
   const [filterType, setFilterType] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
   
   const getFileIcon = (fileType: string) => {
     if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('jpeg') || fileType.includes('png')) {
@@ -80,126 +82,220 @@ const DocumentViewModal = ({
     });
   }, [documents, filterType, searchTerm]);
 
+  const handleView = (doc: Document) => {
+    // For image files, we can show them in the modal
+    // For PDFs and other files, we'll open them in a new tab
+    if (doc.file_type?.includes('image') || doc.file_name.match(/\.(jpg|jpeg|png|gif)$/i)) {
+      setViewingDocument(doc);
+    } else {
+      window.open(doc.file_url, '_blank');
+    }
+  };
+
+  const handleDownload = (doc: Document) => {
+    try {
+      const link = document.createElement('a');
+      link.href = doc.file_url;
+      link.download = doc.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download document");
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Student Documents</DialogTitle>
-          <DialogDescription>
-            View and manage documents for this student
-          </DialogDescription>
-        </DialogHeader>
-        
-        {documents.length > 0 ? (
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) {
+        setViewingDocument(null);
+      }
+      onOpenChange(newOpen);
+    }}>
+      <DialogContent className={viewingDocument ? "max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" : "max-w-4xl"}>
+        {!viewingDocument ? (
           <>
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <div className="flex-1">
-                <Input
-                  placeholder="Search by filename..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div className="w-full sm:w-48">
-                <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All document types</SelectItem>
-                    <SelectItem value="photo">Photo</SelectItem>
-                    <SelectItem value="transcript">Transcript</SelectItem>
-                    <SelectItem value="certificate">Certificate</SelectItem>
-                    <SelectItem value="supporting">Supporting</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <DialogHeader>
+              <DialogTitle>Student Documents</DialogTitle>
+              <DialogDescription>
+                View and manage documents for this student
+              </DialogDescription>
+            </DialogHeader>
             
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>File Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Upload Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDocuments.length > 0 ? (
-                    filteredDocuments.map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            {getFileIcon(doc.file_type || '')}
-                            {doc.file_name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getDocumentTypeColor(doc.document_type)}>
-                            {doc.document_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{(doc.file_size / 1024).toFixed(2)} KB</TableCell>
-                        <TableCell>{new Date(doc.upload_date).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </a>
-                            </Button>
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={doc.file_url} download={doc.file_name}>
-                                <Download className="h-4 w-4 mr-1" />
-                                Download
-                              </a>
-                            </Button>
-                            {onDeleteDocument && (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => onDeleteDocument(doc.id)}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
+            {documents.length > 0 ? (
+              <>
+                <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Search by filename..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="w-full sm:w-48">
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All document types</SelectItem>
+                        <SelectItem value="photo">Photo</SelectItem>
+                        <SelectItem value="transcript">Transcript</SelectItem>
+                        <SelectItem value="certificate">Certificate</SelectItem>
+                        <SelectItem value="supporting">Supporting</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>File Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Upload Date</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-6 text-gray-500">
-                        No documents match your search criteria
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredDocuments.length > 0 ? (
+                        filteredDocuments.map((doc) => (
+                          <TableRow key={doc.id}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center">
+                                {getFileIcon(doc.file_type || '')}
+                                {doc.file_name}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getDocumentTypeColor(doc.document_type)}>
+                                {doc.document_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{(doc.file_size / 1024).toFixed(2)} KB</TableCell>
+                            <TableCell>{new Date(doc.upload_date).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleView(doc)}>
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => handleDownload(doc)}>
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Download
+                                </Button>
+                                {onDeleteDocument && (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => onDeleteDocument(doc.id)}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    Delete
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-6 text-gray-500">
+                            No documents match your search criteria
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            ) : (
+              <div className="p-8 flex items-center justify-center border border-dashed border-gray-300 rounded-lg">
+                <div className="text-center">
+                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 mb-2">No documents found</p>
+                  <p className="text-sm text-gray-400">Upload documents for this student</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex justify-end mt-4">
+              <DialogClose asChild>
+                <Button variant="outline">Close</Button>
+              </DialogClose>
             </div>
           </>
         ) : (
-          <div className="p-8 flex items-center justify-center border border-dashed border-gray-300 rounded-lg">
-            <div className="text-center">
-              <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-2">No documents found</p>
-              <p className="text-sm text-gray-400">Upload documents for this student</p>
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex justify-between items-center">
+                <span>Viewing: {viewingDocument.file_name}</span>
+                <Button variant="ghost" size="sm" onClick={() => setViewingDocument(null)}>
+                  Back to all documents
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="flex-grow overflow-auto p-4 flex items-center justify-center bg-gray-50">
+              {viewingDocument.file_type?.includes('image') || 
+               viewingDocument.file_name.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                <img 
+                  src={viewingDocument.file_url} 
+                  alt={viewingDocument.file_name}
+                  className="max-w-full max-h-[70vh] object-contain"
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                  <p>This document type cannot be previewed directly.</p>
+                  <Button 
+                    className="mt-4" 
+                    onClick={() => window.open(viewingDocument.file_url, '_blank')}
+                  >
+                    Open in new tab
+                  </Button>
+                </div>
+              )}
             </div>
-          </div>
+            
+            <div className="flex justify-between p-4 border-t">
+              <div>
+                <Badge className={getDocumentTypeColor(viewingDocument.document_type)}>
+                  {viewingDocument.document_type}
+                </Badge>
+                <span className="ml-2 text-sm text-gray-500">
+                  {(viewingDocument.file_size / 1024).toFixed(2)} KB • 
+                  {new Date(viewingDocument.upload_date).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleDownload(viewingDocument)}>
+                  <Download className="h-4 w-4 mr-1" />
+                  Download
+                </Button>
+                {onDeleteDocument && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      onDeleteDocument(viewingDocument.id);
+                      setViewingDocument(null);
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </div>
+          </>
         )}
-        
-        <div className="flex justify-end mt-4">
-          <DialogClose asChild>
-            <Button variant="outline">Close</Button>
-          </DialogClose>
-        </div>
       </DialogContent>
     </Dialog>
   );

@@ -163,6 +163,15 @@ export const documentsApi = {
   deleteDocument: async (documentId: string): Promise<void> => {
     try {
       console.log(`Deleting document ${documentId}`);
+      // Find and revoke the object URL if it exists
+      const docToDelete = objectUrls.find(url => url.includes(documentId));
+      if (docToDelete) {
+        URL.revokeObjectURL(docToDelete);
+        const index = objectUrls.indexOf(docToDelete);
+        if (index > -1) {
+          objectUrls.splice(index, 1);
+        }
+      }
     } catch (error) {
       console.error(`Error deleting document ${documentId}:`, error);
       throw error;
