@@ -1,7 +1,23 @@
+
 import { Student, Document, AuditLog, User } from '@/types';
 import { toast } from "sonner";
 
 const API_BASE_URL = '/api';
+
+// Store created object URLs to clean up later
+const objectUrls: string[] = [];
+
+// Helper to clean up object URLs to prevent memory leaks
+export const cleanupObjectUrls = () => {
+  objectUrls.forEach(url => {
+    try {
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Failed to revoke object URL:", e);
+    }
+  });
+  objectUrls.length = 0; // Clear the array
+};
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
@@ -107,19 +123,28 @@ export const studentsApi = {
 };
 
 export const documentsApi = {
-  upload: async (studentId: string, files: File[]): Promise<Document[]> => {
+  upload: async (studentId: string, files: File[], documentType: 'photo' | 'transcript' | 'certificate' | 'supporting' = 'supporting'): Promise<Document[]> => {
     try {
-      console.log(`Uploading ${files.length} files for student ${studentId}`);
-      return files.map((file, index) => ({
-        id: Math.floor(Math.random() * 1000) + index,
-        student_id: parseInt(studentId),
-        document_type: file.type.includes('image') ? 'photo' : 'supporting',
-        file_name: file.name,
-        file_size: file.size,
-        file_type: file.type,
-        file_url: URL.createObjectURL(file),
-        upload_date: new Date()
-      }));
+      console.log(`Uploading ${files.length} ${documentType} files for student ${studentId}`);
+      
+      // Create object URLs for each file with proper cleanup management
+      const createdDocs = files.map((file, index) => {
+        const url = URL.createObjectURL(file);
+        objectUrls.push(url); // Store URL for later cleanup
+        
+        return {
+          id: Math.floor(Math.random() * 1000) + index,
+          student_id: parseInt(studentId),
+          document_type: documentType,
+          file_name: file.name,
+          file_size: file.size,
+          file_type: file.type,
+          file_url: url,
+          upload_date: new Date()
+        }
+      });
+      
+      return createdDocs;
     } catch (error) {
       console.error(`Error uploading documents for student ${studentId}:`, error);
       throw error;

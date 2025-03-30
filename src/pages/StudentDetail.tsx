@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Save, Trash2, Upload, Download, User, Calendar, GraduationCap, 
@@ -11,9 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Student, Document } from "@/types";
-import { studentsApi, documentsApi, auditLogApi } from "@/api/apiClient";
+import { studentsApi, documentsApi, auditLogApi, cleanupObjectUrls } from "@/api/apiClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DocumentViewModal from "@/components/students/DocumentViewModal";
+import DocumentUploadModal from "@/components/students/DocumentUploadModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const StudentDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,7 +37,24 @@ const StudentDetail = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isEditing, setIsEditing] = useState(isNewStudent);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  const documentCounts = {
+    photo: documents.filter(d => d.document_type === 'photo').length,
+    transcript: documents.filter(d => d.document_type === 'transcript').length,
+    certificate: documents.filter(d => d.document_type === 'certificate').length,
+    supporting: documents.filter(d => d.document_type === 'supporting').length
+  };
+  
+  const isMounted = useRef(true);
+  
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      cleanupObjectUrls();
+    };
+  }, []);
   
   useEffect(() => {
     if (!isNewStudent && id) {
@@ -65,16 +82,21 @@ const StudentDetail = () => {
     setIsLoading(true);
     try {
       const studentData = await studentsApi.getById(studentId);
-      setStudent(studentData);
       
-      const docs = await documentsApi.getByStudentId(studentId);
-      setDocuments(docs);
+      if (isMounted.current) {
+        setStudent(studentData);
+        
+        const docs = await documentsApi.getByStudentId(studentId);
+        setDocuments(docs);
+      }
     } catch (error) {
       console.error("Error fetching student:", error);
       toast.error("Error loading student data");
       navigate("/students");
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   };
   
@@ -129,35 +151,43 @@ const StudentDetail = () => {
     }
   };
   
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!id || isNewStudent || !e.target.files || e.target.files.length === 0) return;
-    
-    const files = Array.from(e.target.files);
+  const handleFileUpload = useCallback(async (files: File[], type: 'photo' | 'transcript' | 'certificate' | 'supporting') => {
+    if (!id || isNewStudent || files.length === 0) return;
     
     try {
-      const uploadedDocs = await documentsApi.upload(id, files);
-      setDocuments([...documents, ...uploadedDocs]);
+      const uploadedDocs = await documentsApi.upload(id, files, type);
       
-      auditLogApi.logAction("Document Uploaded", `Uploaded ${files.length} document(s) for student with ID '${student?.student_id}'`);
-      toast.success(`${files.length} document(s) uploaded successfully`);
+      if (isMounted.current) {
+        setDocuments(prev => [...prev, ...uploadedDocs]);
+        
+        auditLogApi.logAction(
+          "Document Uploaded", 
+          `Uploaded ${files.length} ${type} document(s) for student with ID '${student?.student_id}'`
+        );
+        
+        toast.success(`${files.length} ${type} document(s) uploaded successfully`);
+      }
     } catch (error) {
       console.error("Error uploading files:", error);
       toast.error("Error uploading documents");
     }
-  };
+  }, [id, isNewStudent, student]);
 
-  const handleDeleteDocument = async (documentId: number) => {
+  const handleDeleteDocument = useCallback(async (documentId: number) => {
     if (!id) return;
     
     try {
       await documentsApi.deleteDocument(documentId.toString());
-      setDocuments(documents.filter(doc => doc.id !== documentId));
-      toast.success("Document deleted successfully");
+      
+      if (isMounted.current) {
+        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+        toast.success("Document deleted successfully");
+      }
     } catch (error) {
       console.error("Error deleting document:", error);
       toast.error("Error deleting document");
     }
-  };
+  }, [id]);
 
   const toggleEditMode = () => {
     setIsEditing(!isEditing);
@@ -185,6 +215,162 @@ const StudentDetail = () => {
       </div>
     );
   }
+  
+  const renderDocumentsSection = () => {
+    if (isNewStudent) return null;
+    
+    return (
+      <Card className="mt-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary-500" />
+            Student Documents
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 border rounded-lg bg-gray-50">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-base font-medium">Documents and Attachments</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {documents.length} document{documents.length !== 1 ? 's' : ''} uploaded
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsDocumentModalOpen(true)}
+                  className="bg-white"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View All
+                </Button>
+                <Button
+                  onClick={() => setIsUploadModalOpen(true)}
+                  className="bg-primary-500 text-white hover:bg-primary-600"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                    <FileImage className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Photos</h4>
+                    <p className="text-sm text-gray-500">{documentCounts.photo} document(s)</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                    <FileText className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Transcripts</h4>
+                    <p className="text-sm text-gray-500">{documentCounts.transcript} document(s)</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                    <Award className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Certificates</h4>
+                    <p className="text-sm text-gray-500">{documentCounts.certificate} document(s)</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                    <FileIcon className="h-5 w-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Supporting</h4>
+                    <p className="text-sm text-gray-500">{documentCounts.supporting} document(s)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {documents.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {documents.slice(0, 3).map((doc) => (
+                  <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="flex items-center space-x-3 truncate">
+                      <div className="flex-shrink-0">
+                        {doc.document_type === 'photo' ? (
+                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <FileImage className="h-5 w-5 text-blue-500" />
+                          </div>
+                        ) : doc.document_type === 'certificate' ? (
+                          <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <Award className="h-5 w-5 text-green-500" />
+                          </div>
+                        ) : doc.document_type === 'transcript' ? (
+                          <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                            <FileText className="h-5 w-5 text-amber-500" />
+                          </div>
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                            <FileIcon className="h-5 w-5 text-purple-500" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {doc.file_name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(doc.file_size / 1024).toFixed(2)} KB • {new Date(doc.upload_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <a 
+                      href={doc.file_url} 
+                      download={doc.file_name}
+                      className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-500"
+                    >
+                      <Download className="h-5 w-5" />
+                    </a>
+                  </div>
+                ))}
+                
+                {documents.length > 3 && (
+                  <div 
+                    className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 border-dashed cursor-pointer hover:bg-gray-50"
+                    onClick={() => setIsDocumentModalOpen(true)}
+                  >
+                    <span className="text-primary-500 font-medium">
+                      +{documents.length - 3} more documents
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6">
+                <FileText className="h-12 w-12 text-gray-300 mb-3" />
+                <p className="text-gray-500 mb-2">No documents uploaded yet</p>
+                <p className="text-sm text-gray-400">Upload student documents using the button above</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
   
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto w-full animation-fade-in">
@@ -624,112 +810,7 @@ const StudentDetail = () => {
             </Card>
           </div>
           
-          {!isNewStudent && (
-            <Card className="mt-6">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-primary-500" />
-                  Student Documents
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="p-4 border rounded-lg bg-gray-50">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h3 className="text-base font-medium">Documents and Attachments</h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {documents.length} document{documents.length !== 1 ? 's' : ''} uploaded
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setIsDocumentModalOpen(true)}
-                        className="bg-white"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View All
-                      </Button>
-                      <label className="flex items-center">
-                        <span className="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-primary-600 transition-colors">
-                          <Upload className="w-4 h-4 mr-2 inline-block" />
-                          Upload
-                        </span>
-                        <input
-                          type="file"
-                          multiple
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  
-                  {documents.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {documents.slice(0, 3).map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                          <div className="flex items-center space-x-3 truncate">
-                            <div className="flex-shrink-0">
-                              {doc.document_type === 'photo' ? (
-                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <FileImage className="h-5 w-5 text-blue-500" />
-                                </div>
-                              ) : doc.document_type === 'certificate' ? (
-                                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                  <Award className="h-5 w-5 text-green-500" />
-                                </div>
-                              ) : doc.document_type === 'transcript' ? (
-                                <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                                  <FileText className="h-5 w-5 text-amber-500" />
-                                </div>
-                              ) : (
-                                <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                  <FileIcon className="h-5 w-5 text-purple-500" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {doc.file_name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {(doc.file_size / 1024).toFixed(2)} KB • {new Date(doc.upload_date).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <a 
-                            href={doc.file_url} 
-                            download={doc.file_name}
-                            className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-500"
-                          >
-                            <Download className="h-5 w-5" />
-                          </a>
-                        </div>
-                      ))}
-                      
-                      {documents.length > 3 && (
-                        <div 
-                          className="flex items-center justify-center p-3 bg-white rounded-lg border border-gray-200 border-dashed cursor-pointer hover:bg-gray-50"
-                          onClick={() => setIsDocumentModalOpen(true)}
-                        >
-                          <span className="text-primary-500 font-medium">
-                            +{documents.length - 3} more documents
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-6">
-                      <FileText className="h-12 w-12 text-gray-300 mb-3" />
-                      <p className="text-gray-500 mb-2">No documents uploaded yet</p>
-                      <p className="text-sm text-gray-400">Upload student documents using the button above</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {renderDocumentsSection()}
         </TabsContent>
       </Tabs>
       
@@ -738,6 +819,12 @@ const StudentDetail = () => {
         onOpenChange={setIsDocumentModalOpen}
         documents={documents}
         onDeleteDocument={handleDeleteDocument}
+      />
+      
+      <DocumentUploadModal
+        open={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        onUpload={handleFileUpload}
       />
       
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
