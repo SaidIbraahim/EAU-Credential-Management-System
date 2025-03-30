@@ -160,6 +160,9 @@ const StudentDetail = () => {
       if (isMounted.current) {
         setDocuments(prev => [...prev, ...uploadedDocs]);
         
+        const allDocs = [...documents, ...uploadedDocs];
+        localStorage.setItem(`student_${id}_documents`, JSON.stringify(allDocs));
+        
         auditLogApi.logAction(
           "Document Uploaded", 
           `Uploaded ${files.length} ${type} document(s) for student with ID '${student?.student_id}'`
@@ -171,7 +174,7 @@ const StudentDetail = () => {
       console.error("Error uploading files:", error);
       toast.error("Error uploading documents");
     }
-  }, [id, isNewStudent, student]);
+  }, [id, isNewStudent, student, documents]);
 
   const handleDeleteDocument = useCallback(async (documentId: number) => {
     if (!id) return;
@@ -180,14 +183,18 @@ const StudentDetail = () => {
       await documentsApi.deleteDocument(documentId.toString());
       
       if (isMounted.current) {
-        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+        const updatedDocs = documents.filter(doc => doc.id !== documentId);
+        setDocuments(updatedDocs);
+        
+        localStorage.setItem(`student_${id}_documents`, JSON.stringify(updatedDocs));
+        
         toast.success("Document deleted successfully");
       }
     } catch (error) {
       console.error("Error deleting document:", error);
       toast.error("Error deleting document");
     }
-  }, [id]);
+  }, [id, documents]);
 
   const toggleEditMode = () => {
     setIsEditing(!isEditing);

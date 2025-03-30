@@ -1,4 +1,3 @@
-
 import { Student, Document, AuditLog, User } from '@/types';
 import { toast } from "sonner";
 
@@ -13,10 +12,10 @@ export const cleanupObjectUrls = () => {
     try {
       URL.revokeObjectURL(url);
     } catch (e) {
-      console.error("Failed to revoke object URL:", e);
+      console.error("Error revoking object URL:", e);
     }
   });
-  objectUrls.length = 0; // Clear the array
+  objectUrls.length = 0;
 };
 
 const handleResponse = async (response: Response) => {
@@ -123,30 +122,37 @@ export const studentsApi = {
 };
 
 export const documentsApi = {
-  upload: async (studentId: string, files: File[], documentType: 'photo' | 'transcript' | 'certificate' | 'supporting' = 'supporting'): Promise<Document[]> => {
+  upload: async (studentId: string, files: File[], documentType: 'photo' | 'transcript' | 'certificate' | 'supporting'): Promise<Document[]> => {
     try {
-      console.log(`Uploading ${files.length} ${documentType} files for student ${studentId}`);
+      const uploadedDocs: Document[] = [];
       
-      // Create object URLs for each file with proper cleanup management
-      const createdDocs = files.map((file, index) => {
-        const url = URL.createObjectURL(file);
-        objectUrls.push(url); // Store URL for later cleanup
+      for (const file of files) {
+        const objectUrl = URL.createObjectURL(file);
+        objectUrls.push(objectUrl); // Track URLs for cleanup
         
-        return {
-          id: Math.floor(Math.random() * 1000) + index,
-          student_id: parseInt(studentId),
-          document_type: documentType,
+        const newDoc: Document = {
+          id: Math.floor(Math.random() * 10000),
+          student_id: Number(studentId),
           file_name: file.name,
           file_size: file.size,
           file_type: file.type,
-          file_url: url,
-          upload_date: new Date()
-        }
-      });
+          file_url: objectUrl,
+          document_type: documentType,
+          description: '',
+          upload_date: new Date(),
+        };
+        
+        uploadedDocs.push(newDoc);
+        
+        // In a real implementation, we would have:
+        // 1. Create a FormData object
+        // 2. Append the file and metadata
+        // 3. Send a POST request to the server
+      }
       
-      return createdDocs;
+      return uploadedDocs;
     } catch (error) {
-      console.error(`Error uploading documents for student ${studentId}:`, error);
+      console.error("Error uploading documents:", error);
       throw error;
     }
   },
@@ -154,12 +160,14 @@ export const documentsApi = {
   getByStudentId: async (studentId: string): Promise<Document[]> => {
     try {
       // In a real application, this would fetch documents from the server
-      // For now, we'll return an empty array since our mock implementation
-      // doesn't persist documents between page loads
+      // For this example, we'll return a mock array of documents
+      if (localStorage.getItem(`student_${studentId}_documents`)) {
+        return JSON.parse(localStorage.getItem(`student_${studentId}_documents`) || '[]');
+      }
       return [];
     } catch (error) {
       console.error(`Error fetching documents for student ${studentId}:`, error);
-      throw error;
+      return [];
     }
   },
   
