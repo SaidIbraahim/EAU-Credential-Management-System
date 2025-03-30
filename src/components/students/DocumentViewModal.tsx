@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Document } from "@/types";
 import { Eye, Download, Trash2, FileText, FileImage, File as FileIcon, Filter } from "lucide-react";
 import {
@@ -47,7 +47,7 @@ const DocumentViewModal = ({
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
   
-  const getFileIcon = (fileType: string) => {
+  const getFileIcon = useCallback((fileType: string) => {
     if (fileType.includes('image') || fileType.includes('jpg') || fileType.includes('jpeg') || fileType.includes('png')) {
       return <FileImage className="h-4 w-4 mr-2 text-blue-500" />;
     } else if (fileType.includes('pdf')) {
@@ -55,9 +55,9 @@ const DocumentViewModal = ({
     } else {
       return <FileText className="h-4 w-4 mr-2 text-gray-500" />;
     }
-  };
+  }, []);
 
-  const getDocumentTypeColor = (type: string) => {
+  const getDocumentTypeColor = useCallback((type: string) => {
     switch (type) {
       case 'photo':
         return "bg-blue-100 text-blue-800";
@@ -70,7 +70,7 @@ const DocumentViewModal = ({
       default:
         return "bg-gray-100 text-gray-800";
     }
-  };
+  }, []);
 
   const filteredDocuments = useMemo(() => {
     return documents.filter(doc => {
@@ -82,17 +82,19 @@ const DocumentViewModal = ({
     });
   }, [documents, filterType, searchTerm]);
 
-  const handleView = (doc: Document) => {
-    // For image files, we can show them in the modal
-    // For PDFs and other files, we'll open them in a new tab
-    if (doc.file_type?.includes('image') || doc.file_name.match(/\.(jpg|jpeg|png|gif)$/i)) {
-      setViewingDocument(doc);
-    } else {
+  const handleView = useCallback((doc: Document) => {
+    // For images, show them in the modal
+    // For PDFs and other files, open them in a new tab
+    setViewingDocument(doc);
+    
+    if (!(doc.file_type?.includes('image') || 
+         doc.file_name.match(/\.(jpg|jpeg|png|gif)$/i))) {
+      // If it's not an image, open in new tab too
       window.open(doc.file_url, '_blank');
     }
-  };
+  }, []);
 
-  const handleDownload = (doc: Document) => {
+  const handleDownload = useCallback((doc: Document) => {
     try {
       const link = document.createElement('a');
       link.href = doc.file_url;
@@ -104,7 +106,11 @@ const DocumentViewModal = ({
       console.error("Download error:", error);
       toast.error("Failed to download document");
     }
-  };
+  }, []);
+
+  const handleCloseViewer = useCallback(() => {
+    setViewingDocument(null);
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
@@ -235,7 +241,7 @@ const DocumentViewModal = ({
             <DialogHeader>
               <DialogTitle className="flex justify-between items-center">
                 <span>Viewing: {viewingDocument.file_name}</span>
-                <Button variant="ghost" size="sm" onClick={() => setViewingDocument(null)}>
+                <Button variant="ghost" size="sm" onClick={handleCloseViewer}>
                   Back to all documents
                 </Button>
               </DialogTitle>

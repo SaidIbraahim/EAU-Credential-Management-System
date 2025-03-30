@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Upload, X, Plus } from "lucide-react";
 import {
   Dialog,
@@ -10,8 +10,6 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -100,6 +98,11 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
           : item
       ));
     }
+    
+    // Clear the input value so the same file can be selected again if needed
+    if (e.target.value) {
+      e.target.value = '';
+    }
   };
   
   const handleRemoveFile = (type: DocumentType, index: number) => {
@@ -168,7 +171,7 @@ const DocumentUploadModal = ({ open, onOpenChange, onUpload }: DocumentUploadMod
                       type="file"
                       className="hidden"
                       accept={getAcceptValue(docType.type)}
-                      multiple={docType.type === 'supporting'}
+                      multiple={true}
                       onChange={(e) => handleFileChange(docType.type, e)}
                     />
                   </label>

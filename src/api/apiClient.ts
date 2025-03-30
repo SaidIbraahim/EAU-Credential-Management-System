@@ -153,6 +153,9 @@ export const documentsApi = {
   
   getByStudentId: async (studentId: string): Promise<Document[]> => {
     try {
+      // In a real application, this would fetch documents from the server
+      // For now, we'll return an empty array since our mock implementation
+      // doesn't persist documents between page loads
       return [];
     } catch (error) {
       console.error(`Error fetching documents for student ${studentId}:`, error);
