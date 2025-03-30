@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,7 +16,6 @@ import AcademicInfoForm from "./AcademicInfoForm";
 import DocumentsSection from "./DocumentsSection";
 import { formSchema, FormValues } from "./formSchema";
 
-// Constants moved from the original file
 const DEPARTMENTS = [
   { id: 1, name: "Computer Science", code: "CS" },
   { id: 2, name: "Medicine", code: "MED" },
@@ -75,7 +73,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     setError(null);
     
     try {
-      // Check if student ID already exists
       try {
         const existingStudents = await studentsApi.getAll();
         const isDuplicate = existingStudents.data.some(
@@ -91,7 +88,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         console.error("Error checking for duplicate student IDs:", error);
       }
       
-      // Format the data for API submission
       const studentData: Omit<Student, 'id' | 'created_at' | 'updated_at'> = {
         student_id: values.student_id,
         certificate_id: values.certificate_id || undefined,
@@ -100,17 +96,15 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         phone_number: values.phone_number || undefined,
         department: DEPARTMENTS.find(d => d.id.toString() === values.department_id)?.name || "",
         academic_year: ACADEMIC_YEARS.find(y => y.id.toString() === values.academic_year_id)?.academic_year || "",
-        gpa: values.gpa || 0, // Handle empty GPA field
+        gpa: values.gpa || 0,
         grade: values.grade || "",
         admission_date: values.admission_date,
         graduation_date: values.graduation_date,
         status: values.status,
       };
       
-      // Create student
       const createdStudent = await studentsApi.create(studentData);
       
-      // Upload documents if any
       const allFiles = [
         ...files.photo.map(file => ({ file, type: 'photo' as const })),
         ...files.transcript.map(file => ({ file, type: 'transcript' as const })),
@@ -120,9 +114,10 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       
       if (allFiles.length > 0) {
         try {
-          await documentsApi.upload(createdStudent.id.toString(), allFiles.map(f => f.file));
+          for (const { file, type } of allFiles) {
+            await documentsApi.upload(createdStudent.id.toString(), [file], type);
+          }
           
-          // Add document info to audit log
           await auditLogApi.logAction(
             "Documents Uploaded", 
             `Uploaded ${allFiles.length} documents for student ${studentData.full_name} (ID: ${studentData.student_id})`
@@ -133,7 +128,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         }
       }
       
-      // Add to audit log
       await auditLogApi.logAction(
         "Student Added", 
         `Added student ${studentData.full_name} with ID ${studentData.student_id}`
@@ -141,7 +135,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       
       toast.success("Student registered successfully!");
       
-      // Reset form
       form.reset();
       setFiles({
         photo: [],
@@ -150,7 +143,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         supporting: []
       });
       
-      // Call success callback
       if (onSuccess) {
         onSuccess();
       }

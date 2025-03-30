@@ -138,7 +138,6 @@ export const documentsApi = {
           file_type: file.type,
           file_url: objectUrl,
           document_type: documentType,
-          description: '',
           upload_date: new Date(),
         };
         

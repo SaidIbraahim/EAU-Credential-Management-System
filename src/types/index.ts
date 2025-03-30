@@ -1,3 +1,4 @@
+
 export interface Student {
   id: number;
   student_id: string;
@@ -41,6 +42,7 @@ export interface Document {
   file_type?: string;
   file_url: string;
   upload_date: Date;
+  description?: string; // Adding the missing description property
 }
 
 export interface AuditLog {
