@@ -35,5 +35,23 @@ export const MOCK_STUDENTS: Student[] = [
     status: "un-cleared",
     created_at: new Date(),
     updated_at: new Date(),
+  },
+
+  {
+    id: 3,
+    student_id: "EAUGRW0001285",
+    certificate_id: "cert20251364",
+    full_name: "Muse Ahmed Farah",
+    gender: "male",
+    phone_number: "+252908987384",
+    department: "Engineering",
+    academic_year: "2019-2020",
+    gpa: 3.4,
+    grade: "B",
+    admission_date: new Date("2020-09-01"),
+    graduation_date: new Date("2024-06-30"),
+    status: "un-cleared",
+    created_at: new Date(),
+    updated_at: new Date(),
   }
 ];
