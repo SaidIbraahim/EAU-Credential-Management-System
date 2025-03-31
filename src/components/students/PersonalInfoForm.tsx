@@ -19,7 +19,7 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
           <FormItem>
             <FormLabel>Full Name *</FormLabel>
             <FormControl>
-              <Input placeholder="Said Abdishakur Ibrahim" {...field} />
+              <Input placeholder="e.g Said Abdishakur Ibrahim" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -33,7 +33,7 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
           <FormItem>
             <FormLabel>Student ID *</FormLabel>
             <FormControl>
-              <Input placeholder="EAUGRW0001234" {...field} />
+              <Input placeholder="e.g EAUGRW0001234" {...field} />
             </FormControl>
             <FormDescription>
               Unique identifier for the student
