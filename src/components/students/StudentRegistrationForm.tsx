@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Save } from "lucide-react";
+import { AlertCircle, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { studentsApi, documentsApi, auditLogApi } from "@/api/apiClient";
@@ -36,9 +36,10 @@ export type { FormValues };
 
 interface StudentRegistrationFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) => {
+const StudentRegistrationForm = ({ onSuccess, onCancel }: StudentRegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<{
@@ -155,6 +156,20 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     }
   };
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      form.reset();
+      setFiles({
+        photo: [],
+        transcript: [],
+        certificate: [],
+        supporting: []
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {error && (
@@ -178,7 +193,16 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
           
           <DocumentsSection files={files} setFiles={setFiles} />
           
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
             <Button
               type="submit"
               className="bg-primary-500 hover:bg-primary-600 text-white"

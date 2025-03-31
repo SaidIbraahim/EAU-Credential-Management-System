@@ -63,6 +63,10 @@ const Students = () => {
     setActiveTab("list");
   };
   
+  const handleRegistrationCancel = () => {
+    setActiveTab("list");
+  };
+  
   const handleImportSuccess = () => {
     fetchStudents();
     setActiveTab("list");
@@ -102,7 +106,10 @@ const Students = () => {
         <TabsContent value="register" className="animation-fade-in">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <h3 className="text-lg font-medium mb-4">Register New Student</h3>
-            <StudentRegistrationForm onSuccess={handleRegistrationSuccess} />
+            <StudentRegistrationForm 
+              onSuccess={handleRegistrationSuccess} 
+              onCancel={handleRegistrationCancel}
+            />
           </div>
         </TabsContent>
       </Tabs>

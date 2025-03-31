@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Upload, XCircle, FileImage, FileText, File } from "lucide-react";
 
 interface DocumentUploaderProps {
@@ -22,6 +22,8 @@ const DocumentUploader = ({
   multiple = false,
   required = false
 }: DocumentUploaderProps) => {
+  const [isDragging, setIsDragging] = useState(false);
+
   const getAcceptValue = () => {
     switch (type) {
       case 'photo':
@@ -62,35 +64,76 @@ const DocumentUploader = ({
     }
   };
 
+  const validateFiles = (fileList: File[]) => {
+    // Check file type validation
+    const acceptedTypes = getAcceptValue().split(',');
+    const invalidFiles = fileList.filter(file => {
+      const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+      return !acceptedTypes.some(type => type === extension);
+    });
+    
+    if (invalidFiles.length > 0) {
+      alert(`Some files have invalid formats. Allowed formats are: ${getAcceptText()}`);
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const fileList = Array.from(e.target.files);
       
-      // Check file type validation
-      const acceptedTypes = getAcceptValue().split(',');
-      const invalidFiles = fileList.filter(file => {
-        const extension = '.' + file.name.split('.').pop()?.toLowerCase();
-        return !acceptedTypes.some(type => type === extension);
-      });
-      
-      if (invalidFiles.length > 0) {
-        alert(`Some files have invalid formats. Allowed formats are: ${getAcceptText()}`);
-        return;
+      if (validateFiles(fileList)) {
+        onAddFiles(fileList);
       }
-      
-      onAddFiles(fileList);
     }
   };
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const fileList = Array.from(e.dataTransfer.files);
+      
+      if (validateFiles(fileList)) {
+        onAddFiles(multiple ? fileList : [fileList[0]]);
+      }
+    }
+  }, [multiple, onAddFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
 
   return (
     <div>
       <p className="text-sm font-medium mb-2">
         {title} {required && <span className="text-red-500">*</span>}
       </p>
-      <div className="border border-dashed border-gray-300 rounded-lg p-4">
+      <div 
+        className={`border border-dashed rounded-lg p-4 transition-colors ${
+          isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
+        }`}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
         <label className="flex flex-col items-center justify-center cursor-pointer">
-          <Upload className="h-8 w-8 text-gray-400 mb-2" />
-          <span className="text-sm text-gray-500">Click to upload {title.toLowerCase()}</span>
+          <Upload className={`h-8 w-8 mb-2 ${isDragging ? 'text-primary' : 'text-gray-400'}`} />
+          <span className="text-sm text-gray-500">
+            {isDragging ? 'Drop files here' : 'Drag & drop or click to upload'}
+          </span>
           <span className="text-xs text-gray-400 mt-1">Allowed formats: {getAcceptText()}</span>
           <input
             type="file"
