@@ -1,6 +1,6 @@
-
 import { useState, useCallback } from "react";
 import { Upload, XCircle, FileImage, FileText, File } from "lucide-react";
+import { FILE_TYPES } from "@/mock/fileTypes";
 
 interface DocumentUploaderProps {
   type: 'photo' | 'transcript' | 'certificate' | 'supporting';
@@ -25,33 +25,11 @@ const DocumentUploader = ({
   const [isDragging, setIsDragging] = useState(false);
 
   const getAcceptValue = () => {
-    switch (type) {
-      case 'photo':
-        return ".jpg,.jpeg,.png";
-      case 'transcript':
-        return ".pdf";
-      case 'certificate':
-        return ".pdf";
-      case 'supporting':
-        return ".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png";
-      default:
-        return ".pdf,.doc,.docx,.jpg,.jpeg,.png";
-    }
+    return FILE_TYPES[type].extensions.join(',');
   };
 
   const getAcceptText = () => {
-    switch (type) {
-      case 'photo':
-        return "JPG, JPEG, PNG";
-      case 'transcript':
-        return "PDF only";
-      case 'certificate':
-        return "PDF only";
-      case 'supporting':
-        return "PDF, DOC, DOCX, Excel, JPG, JPEG, PNG";
-      default:
-        return "";
-    }
+    return FILE_TYPES[type].displayText;
   };
 
   const getFileIcon = (fileType: string) => {
@@ -66,7 +44,7 @@ const DocumentUploader = ({
 
   const validateFiles = (fileList: File[]) => {
     // Check file type validation
-    const acceptedTypes = getAcceptValue().split(',');
+    const acceptedTypes = FILE_TYPES[type].extensions;
     const invalidFiles = fileList.filter(file => {
       const extension = '.' + file.name.split('.').pop()?.toLowerCase();
       return !acceptedTypes.some(type => type === extension);
