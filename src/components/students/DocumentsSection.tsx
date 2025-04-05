@@ -1,4 +1,5 @@
 
+import React, { memo } from "react";
 import DocumentUploader from "./DocumentUploader";
 
 interface DocumentsSectionProps {
@@ -16,7 +17,8 @@ interface DocumentsSectionProps {
   }>>;
 }
 
-const DocumentsSection = ({ files, setFiles }: DocumentsSectionProps) => {
+// Memoize the component to prevent unnecessary re-renders
+const DocumentsSection = memo(({ files, setFiles }: DocumentsSectionProps) => {
   const handleAddFiles = (type: 'photo' | 'transcript' | 'certificate' | 'supporting', newFiles: File[]) => {
     setFiles(prev => ({
       ...prev,
@@ -72,6 +74,8 @@ const DocumentsSection = ({ files, setFiles }: DocumentsSectionProps) => {
       </div>
     </div>
   );
-};
+});
+
+DocumentsSection.displayName = "DocumentsSection";
 
 export default DocumentsSection;

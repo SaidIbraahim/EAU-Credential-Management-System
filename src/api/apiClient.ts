@@ -1,7 +1,28 @@
+
 import { Student, Document, AuditLog, User } from '@/types';
 import { toast } from "sonner";
+import { MOCK_STUDENTS } from '@/mock/students';
+import { MOCK_AUDIT_LOGS } from '@/mock/auditLogs';
+import { MOCK_REPORT_DATA } from '@/mock/reportData';
+import { MOCK_USERS } from '@/mock/users';
+import { FILE_TYPES } from '@/mock/fileTypes';
 
 const API_BASE_URL = '/api';
+
+// Store created object URLs to clean up later
+const objectUrls: string[] = [];
+
+// Helper to clean up object URLs to prevent memory leaks
+export const cleanupObjectUrls = () => {
+  objectUrls.forEach(url => {
+    try {
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Error revoking object URL:", e);
+    }
+  });
+  objectUrls.length = 0;
+};
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
@@ -107,30 +128,74 @@ export const studentsApi = {
 };
 
 export const documentsApi = {
-  upload: async (studentId: string, files: File[]): Promise<Document[]> => {
+  upload: async (studentId: string, files: File[], documentType: 'photo' | 'transcript' | 'certificate' | 'supporting'): Promise<Document[]> => {
     try {
-      console.log(`Uploading ${files.length} files for student ${studentId}`);
-      return files.map((file, index) => ({
-        id: Math.floor(Math.random() * 1000) + index,
-        student_id: parseInt(studentId),
-        document_type: file.type.includes('image') ? 'photo' : 'supporting',
-        file_name: file.name,
-        file_size: file.size,
-        file_type: file.type,
-        file_url: URL.createObjectURL(file),
-        upload_date: new Date()
-      }));
+      const uploadedDocs: Document[] = [];
+      
+      // Get allowed types for the document type
+      const allowedTypes = FILE_TYPES[documentType].extensions;
+      
+      for (const file of files) {
+        const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+        const isValidType = allowedTypes.some(type => type === extension);
+        
+        if (!isValidType) {
+          throw new Error(`Invalid file type for ${documentType}. Allowed types: ${FILE_TYPES[documentType].displayText}`);
+        }
+        
+        const objectUrl = URL.createObjectURL(file);
+        objectUrls.push(objectUrl); // Track URLs for cleanup
+        
+        const newDoc: Document = {
+          id: Math.floor(Math.random() * 10000),
+          student_id: Number(studentId),
+          file_name: file.name,
+          file_size: file.size,
+          file_type: file.type,
+          file_url: objectUrl,
+          document_type: documentType,
+          upload_date: new Date(),
+          description: ''
+        };
+        
+        uploadedDocs.push(newDoc);
+      }
+      
+      return uploadedDocs;
     } catch (error) {
-      console.error(`Error uploading documents for student ${studentId}:`, error);
+      console.error("Error uploading documents:", error);
       throw error;
     }
   },
   
   getByStudentId: async (studentId: string): Promise<Document[]> => {
     try {
+      // In a real application, this would fetch documents from the server
+      // For this example, we'll return a mock array of documents
+      if (localStorage.getItem(`student_${studentId}_documents`)) {
+        return JSON.parse(localStorage.getItem(`student_${studentId}_documents`) || '[]');
+      }
       return [];
     } catch (error) {
       console.error(`Error fetching documents for student ${studentId}:`, error);
+      return [];
+    }
+  },
+  
+  deleteDocument: async (documentId: string): Promise<void> => {
+    try {
+      console.log(`Deleting document ${documentId}`);
+      // Find and revoke the object URL if it exists
+      const docToDelete = objectUrls.find(url => url.includes(documentId));
+      if (docToDelete) {
+        URL.revokeObjectURL(docToDelete);
+        const index = objectUrls.indexOf(docToDelete);
+        if (index > -1) {
+          objectUrls.splice(index, 1);
+        }
+      }
+    } catch (error) {
+      console.error(`Error deleting document ${documentId}:`, error);
       throw error;
     }
   }
@@ -139,29 +204,7 @@ export const documentsApi = {
 export const reportsApi = {
   generate: async (filters = {}): Promise<any> => {
     try {
-      return {
-        departmentDistribution: [
-          { department: 'Computer Science', count: 45 },
-          { department: 'Medicine', count: 32 },
-          { department: 'Engineering', count: 28 },
-          { department: 'Business', count: 25 },
-          { department: 'Law', count: 18 }
-        ],
-        gpaDistribution: [
-          { range: '3.5-4.0', count: 35 },
-          { range: '3.0-3.5', count: 42 },
-          { range: '2.5-3.0', count: 38 },
-          { range: '2.0-2.5', count: 25 },
-          { range: 'Below 2.0', count: 12 }
-        ],
-        yearlyAdmissions: [
-          { year: '2018', count: 120 },
-          { year: '2019', count: 135 },
-          { year: '2020', count: 115 },
-          { year: '2021', count: 140 },
-          { year: '2022', count: 150 }
-        ]
-      };
+      return MOCK_REPORT_DATA;
     } catch (error) {
       console.error('Error generating reports:', error);
       throw error;
@@ -197,13 +240,7 @@ export const usersApi = {
     try {
       if (username === 'admin' && password === 'password') {
         return {
-          user: {
-            id: 1,
-            username: 'admin',
-            role: 'admin',
-            created_at: new Date(),
-            updated_at: new Date()
-          },
+          user: MOCK_USERS[0],
           token: 'mock-jwt-token'
         };
       }
@@ -231,22 +268,7 @@ export const usersApi = {
   
   getAll: async (): Promise<User[]> => {
     try {
-      return [
-        {
-          id: 1,
-          username: 'admin',
-          role: 'admin',
-          created_at: new Date(),
-          updated_at: new Date()
-        },
-        {
-          id: 2,
-          username: 'super_admin',
-          role: 'super_admin',
-          created_at: new Date(),
-          updated_at: new Date()
-        }
-      ];
+      return MOCK_USERS;
     } catch (error) {
       console.error('Error fetching users:', error);
       throw error;
@@ -268,78 +290,3 @@ export const usersApi = {
     }
   }
 };
-
-const MOCK_STUDENTS: Student[] = [
-  {
-    id: 1,
-    student_id: "EAUGRW0001234",
-    certificate_id: "9685124",
-    full_name: "Ali Adam Jama",
-    gender: "male",
-    phone_number: "+252908123456",
-    department: "Computer Science",
-    academic_year: "2020-2021",
-    gpa: 3.5,
-    grade: "A",
-    admission_date: new Date("2021-09-01"),
-    graduation_date: new Date("2025-06-30"),
-    status: "cleared",
-    created_at: new Date(),
-    updated_at: new Date(),
-  },
-  {
-    id: 2,
-    student_id: "EAUGRW0001265",
-    certificate_id: "cert20251354",
-    full_name: "Hawa Yusuf Ali",
-    gender: "female",
-    phone_number: "+252908987654",
-    department: "Medicine",
-    academic_year: "2019-2020",
-    gpa: 3.4,
-    grade: "B",
-    admission_date: new Date("2020-09-01"),
-    graduation_date: new Date("2024-06-30"),
-    status: "un-cleared",
-    created_at: new Date(),
-    updated_at: new Date(),
-  }
-];
-
-const MOCK_AUDIT_LOGS: AuditLog[] = [
-  {
-    id: 1,
-    user_id: 1,
-    action: "Student Added",
-    details: "Added student 'John Doe' with ID 'ST2023001'",
-    timestamp: new Date(2023, 5, 10, 9, 30)
-  },
-  {
-    id: 2,
-    user_id: 2,
-    action: "Bulk Import",
-    details: "Imported 25 students from CSV file",
-    timestamp: new Date(2023, 5, 9, 14, 15)
-  },
-  {
-    id: 3,
-    user_id: 1,
-    action: "Student Updated",
-    details: "Updated information for student 'Jane Smith' with ID 'ST2023005'",
-    timestamp: new Date(2023, 5, 8, 11, 45)
-  },
-  {
-    id: 4,
-    user_id: 3,
-    action: "Document Uploaded",
-    details: "Uploaded transcript for student with ID 'ST2023010'",
-    timestamp: new Date(2023, 5, 7, 16, 20)
-  },
-  {
-    id: 5,
-    user_id: 2,
-    action: "Student Deleted",
-    details: "Removed student 'Alex Johnson' with ID 'ST2023015'",
-    timestamp: new Date(2023, 5, 6, 10, 5)
-  }
-];

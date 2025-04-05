@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Save } from "lucide-react";
+import { AlertCircle, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { studentsApi, documentsApi, auditLogApi } from "@/api/apiClient";
@@ -16,31 +15,16 @@ import PersonalInfoForm from "./PersonalInfoForm";
 import AcademicInfoForm from "./AcademicInfoForm";
 import DocumentsSection from "./DocumentsSection";
 import { formSchema, FormValues } from "./formSchema";
-
-// Constants moved from the original file
-const DEPARTMENTS = [
-  { id: 1, name: "Computer Science", code: "CS" },
-  { id: 2, name: "Medicine", code: "MED" },
-  { id: 3, name: "Engineering", code: "ENG" },
-  { id: 4, name: "Business", code: "BUS" },
-  { id: 5, name: "Law", code: "LAW" }
-];
-
-const ACADEMIC_YEARS = [
-  { id: 1, academic_year: "2020-2021" },
-  { id: 2, academic_year: "2021-2022" },
-  { id: 3, academic_year: "2022-2023" },
-  { id: 4, academic_year: "2023-2024" },
-  { id: 5, academic_year: "2024-2025" }
-];
+import { DEPARTMENTS, ACADEMIC_YEARS } from "@/mock/academicData";
 
 export type { FormValues };
 
 interface StudentRegistrationFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) => {
+const StudentRegistrationForm = ({ onSuccess, onCancel }: StudentRegistrationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<{
@@ -75,23 +59,34 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     setError(null);
     
     try {
-      // Check if student ID already exists
       try {
         const existingStudents = await studentsApi.getAll();
-        const isDuplicate = existingStudents.data.some(
+        
+        // Check for duplicate student ID
+        const isDuplicateStudentId = existingStudents.data.some(
           student => student.student_id === values.student_id
         );
         
-        if (isDuplicate) {
+        if (isDuplicateStudentId) {
           setError(`Student ID "${values.student_id}" already exists.`);
           setIsSubmitting(false);
           return;
         }
+        
+        // Check for duplicate certificate ID
+        const isDuplicateCertificateId = existingStudents.data.some(
+          student => student.certificate_id === values.certificate_id
+        );
+        
+        if (isDuplicateCertificateId) {
+          setError(`Certificate ID "${values.certificate_id}" already exists.`);
+          setIsSubmitting(false);
+          return;
+        }
       } catch (error) {
-        console.error("Error checking for duplicate student IDs:", error);
+        console.error("Error checking for duplicates:", error);
       }
       
-      // Format the data for API submission
       const studentData: Omit<Student, 'id' | 'created_at' | 'updated_at'> = {
         student_id: values.student_id,
         certificate_id: values.certificate_id || undefined,
@@ -100,17 +95,15 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         phone_number: values.phone_number || undefined,
         department: DEPARTMENTS.find(d => d.id.toString() === values.department_id)?.name || "",
         academic_year: ACADEMIC_YEARS.find(y => y.id.toString() === values.academic_year_id)?.academic_year || "",
-        gpa: values.gpa || 0, // Handle empty GPA field
+        gpa: values.gpa || 0,
         grade: values.grade || "",
         admission_date: values.admission_date,
         graduation_date: values.graduation_date,
         status: values.status,
       };
       
-      // Create student
       const createdStudent = await studentsApi.create(studentData);
       
-      // Upload documents if any
       const allFiles = [
         ...files.photo.map(file => ({ file, type: 'photo' as const })),
         ...files.transcript.map(file => ({ file, type: 'transcript' as const })),
@@ -120,9 +113,10 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       
       if (allFiles.length > 0) {
         try {
-          await documentsApi.upload(createdStudent.id.toString(), allFiles.map(f => f.file));
+          for (const { file, type } of allFiles) {
+            await documentsApi.upload(createdStudent.id.toString(), [file], type);
+          }
           
-          // Add document info to audit log
           await auditLogApi.logAction(
             "Documents Uploaded", 
             `Uploaded ${allFiles.length} documents for student ${studentData.full_name} (ID: ${studentData.student_id})`
@@ -133,7 +127,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         }
       }
       
-      // Add to audit log
       await auditLogApi.logAction(
         "Student Added", 
         `Added student ${studentData.full_name} with ID ${studentData.student_id}`
@@ -141,7 +134,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       
       toast.success("Student registered successfully!");
       
-      // Reset form
       form.reset();
       setFiles({
         photo: [],
@@ -150,7 +142,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         supporting: []
       });
       
-      // Call success callback
       if (onSuccess) {
         onSuccess();
       }
@@ -160,6 +151,20 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       toast.error("Failed to register student");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      form.reset();
+      setFiles({
+        photo: [],
+        transcript: [],
+        certificate: [],
+        supporting: []
+      });
     }
   };
 
@@ -186,7 +191,16 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
           
           <DocumentsSection files={files} setFiles={setFiles} />
           
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
             <Button
               type="submit"
               className="bg-primary-500 hover:bg-primary-600 text-white"
