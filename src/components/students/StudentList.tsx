@@ -1,21 +1,12 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Download, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Student } from "@/types";
 import { auditLogApi } from "@/api/apiClient";
 import { toast } from "sonner";
+import StudentFilters from "./StudentFilters";
 
 interface StudentListProps {
   students: Student[];
@@ -110,15 +101,8 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
            matchesAcademicYear && matchesGpa && matchesGender;
   });
   
-  const getUniqueValues = (field: keyof Student) => {
-    return [...new Set(students.map(student => student[field]))]
-      .filter(Boolean)
-      .sort();
-  };
-  
   const handleExportStudents = () => {
     try {
-      // Create CSV content from students data
       const headers = [
         "Student ID", 
         "Full Name", 
@@ -134,7 +118,6 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
         "Status"
       ];
       
-      // Get filtered students if filter is active, otherwise use all students
       const dataToExport = isFilterActive ? filteredStudents : students;
       
       if (dataToExport.length === 0) {
@@ -142,16 +125,15 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
         return;
       }
       
-      // Format the data
       const csvRows = [
-        headers.join(','), // Add headers row
+        headers.join(','), 
         ...dataToExport.map(student => [
           student.student_id,
-          `"${student.full_name}"`, // Quote names to handle commas in names
+          `"${student.full_name}"`,
           student.certificate_id || '',
           student.gender,
           student.phone_number || '',
-          `"${student.department}"`, // Quote department to handle commas
+          `"${student.department}"`,
           student.academic_year,
           student.gpa,
           student.grade,
@@ -161,24 +143,20 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
         ].join(','))
       ];
       
-      // Create a blob and download
       const csvContent = csvRows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
       
-      // Create filename with date
       const date = new Date().toISOString().split('T')[0];
       const filterInfo = isFilterActive ? '-filtered' : '';
       link.setAttribute('download', `students-export${filterInfo}-${date}.csv`);
       
-      // Programmatically click the link to trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
-      // Log the export action
       auditLogApi.logAction("Export Students", `Exported ${dataToExport.length} student records to CSV`);
       
       toast.success(`Successfully exported ${dataToExport.length} students`);
@@ -191,90 +169,16 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
       <div className="p-4 border-b border-gray-200">
-        <div className="flex flex-col space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-none sm:min-w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search students..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={searchField} onValueChange={setSearchField}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Search in" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Fields</SelectItem>
-                  <SelectItem value="student_id">Student ID</SelectItem>
-                  <SelectItem value="full_name">Name</SelectItem>
-                  <SelectItem value="certificate_id">Certificate</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto justify-end">
-              <Button 
-                variant="outline" 
-                size="icon"
-                onClick={handleExportStudents}
-                title="Export students data"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          {isFilterActive && activeFilterCount > 0 && (
-            <div className="flex flex-wrap gap-2 pb-1">
-              {searchQuery && (
-                <Badge variant="secondary" className="px-2 py-1 gap-1 text-xs">
-                  Search: {searchQuery.length > 10 ? searchQuery.substring(0, 10) + '...' : searchQuery}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => setSearchQuery('')} />
-                </Badge>
-              )}
-              {filters.department && (
-                <Badge variant="secondary" className="px-2 py-1 gap-1 text-xs">
-                  Department: {filters.department}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleFilterChange('department', '')} />
-                </Badge>
-              )}
-              {filters.academicYear && (
-                <Badge variant="secondary" className="px-2 py-1 gap-1 text-xs">
-                  Year: {filters.academicYear}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleFilterChange('academicYear', '')} />
-                </Badge>
-              )}
-              {filters.status && (
-                <Badge variant="secondary" className="px-2 py-1 gap-1 text-xs">
-                  Status: {filters.status}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleFilterChange('status', '')} />
-                </Badge>
-              )}
-              {filters.gpaRange && (
-                <Badge variant="secondary" className="px-2 py-1 gap-1 text-xs">
-                  GPA: {filters.gpaRange}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleFilterChange('gpaRange', '')} />
-                </Badge>
-              )}
-              {filters.gender && (
-                <Badge variant="secondary" className="px-2 py-1 gap-1 text-xs">
-                  Gender: {filters.gender}
-                  <X className="h-3 w-3 cursor-pointer" onClick={() => handleFilterChange('gender', '')} />
-                </Badge>
-              )}
-              <Button 
-                variant="ghost" 
-                className="h-6 text-xs px-2"
-                onClick={clearFilters}
-              >
-                Clear All
-              </Button>
-            </div>
-          )}
-        </div>
+        <StudentFilters 
+          searchQuery={searchQuery}
+          searchField={searchField}
+          filters={filters}
+          onSearchChange={setSearchQuery}
+          onSearchFieldChange={setSearchField}
+          onFilterChange={handleFilterChange}
+          onClearFilters={clearFilters}
+          activeFilterCount={activeFilterCount}
+        />
       </div>
       
       <div className="overflow-x-auto">
