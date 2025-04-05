@@ -11,7 +11,7 @@ const mockAuditLogs: AuditLogType[] = [
     id: 1,
     user_id: 1,
     action: "Student Added",
-    details: "Added student 'Ali Abdi' with ID 'EAUGRW0002355'",
+    details: "Added student 'John Doe' with ID 'ST2023001'",
     timestamp: new Date(2023, 5, 10, 9, 30)
   },
   {
@@ -25,21 +25,21 @@ const mockAuditLogs: AuditLogType[] = [
     id: 3,
     user_id: 1,
     action: "Student Updated",
-    details: "Updated information for student 'Halima Abdi Ali' with ID 'EAUGRW0004512'",
+    details: "Updated information for student 'Jane Smith' with ID 'ST2023005'",
     timestamp: new Date(2023, 5, 8, 11, 45)
   },
   {
     id: 4,
     user_id: 3,
     action: "Document Uploaded",
-    details: "Uploaded transcript for student with ID 'EAUGRW0001252'",
+    details: "Uploaded transcript for student with ID 'ST2023010'",
     timestamp: new Date(2023, 5, 7, 16, 20)
   },
   {
     id: 5,
     user_id: 2,
     action: "Student Deleted",
-    details: "Removed student 'Alex Johnson' with ID 'ST2023015'",
+    details: "Removed student 'Anisa Abdi Ali' with ID 'EAUGRW0008578'",
     timestamp: new Date(2023, 5, 6, 10, 5)  // Fixed: Changed '10, 05' to '10, 5'
   }
 ];
@@ -48,7 +48,7 @@ const mockAuditLogs: AuditLogType[] = [
 const mockUsers = {
   1: "admin",
   2: "super_admin",
-  3: "Farah Abdi"
+  3: "john.doe"
 };
 
 const AuditLogPage = () => {
