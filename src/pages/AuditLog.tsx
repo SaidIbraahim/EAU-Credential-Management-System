@@ -11,7 +11,7 @@ const mockAuditLogs: AuditLogType[] = [
     id: 1,
     user_id: 1,
     action: "Student Added",
-    details: "Added student 'John Doe' with ID 'ST2023001'",
+    details: "Added student 'Halima Abdi' with ID 'EAGRW001235'",
     timestamp: new Date(2023, 5, 10, 9, 30)
   },
   {
@@ -39,7 +39,7 @@ const mockAuditLogs: AuditLogType[] = [
     id: 5,
     user_id: 2,
     action: "Student Deleted",
-    details: "Removed student 'Anisa Abdi Ali' with ID 'EAUGRW0008578'",
+    details: "Removed student 'Alex Johnson' with ID 'ST2023015'",
     timestamp: new Date(2023, 5, 6, 10, 5)  // Fixed: Changed '10, 05' to '10, 5'
   }
 ];
