@@ -61,17 +61,30 @@ const StudentRegistrationForm = ({ onSuccess, onCancel }: StudentRegistrationFor
     try {
       try {
         const existingStudents = await studentsApi.getAll();
-        const isDuplicate = existingStudents.data.some(
+        
+        // Check for duplicate student ID
+        const isDuplicateStudentId = existingStudents.data.some(
           student => student.student_id === values.student_id
         );
         
-        if (isDuplicate) {
+        if (isDuplicateStudentId) {
           setError(`Student ID "${values.student_id}" already exists.`);
           setIsSubmitting(false);
           return;
         }
+        
+        // Check for duplicate certificate ID
+        const isDuplicateCertificateId = existingStudents.data.some(
+          student => student.certificate_id === values.certificate_id
+        );
+        
+        if (isDuplicateCertificateId) {
+          setError(`Certificate ID "${values.certificate_id}" already exists.`);
+          setIsSubmitting(false);
+          return;
+        }
       } catch (error) {
-        console.error("Error checking for duplicate student IDs:", error);
+        console.error("Error checking for duplicates:", error);
       }
       
       const studentData: Omit<Student, 'id' | 'created_at' | 'updated_at'> = {

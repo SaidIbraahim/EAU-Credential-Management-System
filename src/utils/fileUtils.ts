@@ -48,6 +48,10 @@ export const parseCSV = (file: File): Promise<Student[]> => {
             return;
           }
           
+          // Check for duplicate certificate IDs within the file itself
+          const certificateIds = new Set<string>();
+          const studentIds = new Set<string>();
+          
           const students = results.data.map((row: any, index: number) => {
             // Convert CSV data to Student type with additional validation
             const student: Partial<Student> = {
@@ -87,17 +91,22 @@ export const parseCSV = (file: File): Promise<Student[]> => {
             if (student.gpa !== undefined && (student.gpa < 0 || student.gpa > 4)) {
               throw new Error(`Row ${index + 1}: GPA must be between 0 and 4, got ${student.gpa}`);
             }
+            
+            // Check for duplicate student IDs within the CSV file
+            if (studentIds.has(student.student_id)) {
+              throw new Error(`Row ${index + 1}: Duplicate Student ID: ${student.student_id} found in the CSV file`);
+            }
+            studentIds.add(student.student_id);
+            
+            // Check for duplicate certificate IDs within the CSV file (if not empty)
+            if (student.certificate_id && certificateIds.has(student.certificate_id)) {
+              throw new Error(`Row ${index + 1}: Duplicate Certificate ID: ${student.certificate_id} found in the CSV file`);
+            }
+            if (student.certificate_id) {
+              certificateIds.add(student.certificate_id);
+            }
 
             return student as Student;
-          });
-
-          // Check for duplicate student IDs within the imported file
-          const studentIdMap = new Map<string, number>();
-          students.forEach((student, index) => {
-            if (studentIdMap.has(student.student_id)) {
-              throw new Error(`Duplicate Student ID: ${student.student_id} at rows ${studentIdMap.get(student.student_id)! + 1} and ${index + 1}`);
-            }
-            studentIdMap.set(student.student_id, index);
           });
 
           resolve(students);
@@ -163,13 +172,25 @@ export const validateStudents = (
   
   // Check for duplicates with existing data
   newStudents.forEach(newStudent => {
-    const duplicate = existingStudents.find(
+    // Check for duplicate student IDs
+    const duplicateStudentId = existingStudents.find(
       existingStudent => existingStudent.student_id === newStudent.student_id
     );
     
-    if (duplicate) {
+    // Check for duplicate certificate IDs
+    const duplicateCertificateId = existingStudents.find(
+      existingStudent => 
+        existingStudent.certificate_id && 
+        newStudent.certificate_id && 
+        existingStudent.certificate_id === newStudent.certificate_id
+    );
+    
+    if (duplicateStudentId) {
       duplicates.push(newStudent);
       errors.push(`Student ID ${newStudent.student_id} already exists in the system`);
+    } else if (duplicateCertificateId) {
+      duplicates.push(newStudent);
+      errors.push(`Certificate ID ${newStudent.certificate_id} already exists in the system`);
     } else {
       validStudents.push(newStudent);
     }
