@@ -1,13 +1,9 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Student } from "@/types";
-import { auditLogApi } from "@/api/apiClient";
-import { toast } from "sonner";
 import StudentFilters from "./StudentFilters";
+import StudentTable from "./StudentTable";
+import StudentExport from "./StudentExport";
 
 interface StudentListProps {
   students: Student[];
@@ -15,7 +11,6 @@ interface StudentListProps {
 }
 
 const StudentList = ({ students, isLoading }: StudentListProps) => {
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState("all");
   const [filters, setFilters] = useState({
@@ -92,7 +87,6 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
       }
     }
     
-    // Update filter logic to handle the new "all_*" values
     const matchesDepartment = !filters.department || 
                              filters.department === "all_departments" || 
                              student.department === filters.department;
@@ -117,141 +111,30 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
            matchesAcademicYear && matchesGpa && matchesGender;
   });
   
-  const handleExportStudents = () => {
-    try {
-      const headers = [
-        "Student ID", 
-        "Full Name", 
-        "Certificate ID", 
-        "Gender", 
-        "Phone Number",
-        "Department", 
-        "Academic Year", 
-        "GPA", 
-        "Grade",
-        "Admission Date", 
-        "Graduation Date", 
-        "Status"
-      ];
-      
-      const dataToExport = isFilterActive ? filteredStudents : students;
-      
-      if (dataToExport.length === 0) {
-        toast.error("No students to export");
-        return;
-      }
-      
-      const csvRows = [
-        headers.join(','), 
-        ...dataToExport.map(student => [
-          student.student_id,
-          `"${student.full_name}"`,
-          student.certificate_id || '',
-          student.gender,
-          student.phone_number || '',
-          `"${student.department}"`,
-          student.academic_year,
-          student.gpa,
-          student.grade,
-          student.admission_date ? new Date(student.admission_date).toISOString().split('T')[0] : '',
-          student.graduation_date ? new Date(student.graduation_date).toISOString().split('T')[0] : '',
-          student.status
-        ].join(','))
-      ];
-      
-      const csvContent = csvRows.join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      
-      const date = new Date().toISOString().split('T')[0];
-      const filterInfo = isFilterActive ? '-filtered' : '';
-      link.setAttribute('download', `students-export${filterInfo}-${date}.csv`);
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      auditLogApi.logAction("Export Students", `Exported ${dataToExport.length} student records to CSV`);
-      
-      toast.success(`Successfully exported ${dataToExport.length} students`);
-    } catch (error) {
-      console.error("Export error:", error);
-      toast.error("Error exporting students: " + (error instanceof Error ? error.message : "Unknown error"));
-    }
-  };
-  
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
       <div className="p-4 border-b border-gray-200">
-        <StudentFilters 
-          searchQuery={searchQuery}
-          searchField={searchField}
-          filters={filters}
-          onSearchChange={setSearchQuery}
-          onSearchFieldChange={setSearchField}
-          onFilterChange={handleFilterChange}
-          onClearFilters={clearFilters}
-          activeFilterCount={activeFilterCount}
-        />
+        <div className="flex justify-between items-center">
+          <StudentFilters 
+            searchQuery={searchQuery}
+            searchField={searchField}
+            filters={filters}
+            onSearchChange={setSearchQuery}
+            onSearchFieldChange={setSearchField}
+            onFilterChange={handleFilterChange}
+            onClearFilters={clearFilters}
+            activeFilterCount={activeFilterCount}
+          />
+          <StudentExport 
+            students={students}
+            filteredStudents={filteredStudents}
+            isFilterActive={isFilterActive}
+          />
+        </div>
       </div>
       
       <div className="overflow-x-auto">
-        {isLoading ? (
-          <div className="p-6 text-center">
-            <p className="text-gray-500">Loading students...</p>
-          </div>
-        ) : filteredStudents.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student ID</TableHead>
-                <TableHead>Full Name</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Academic Year</TableHead>
-                <TableHead>GPA</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStudents.map((student) => (
-                <TableRow key={student.id} className="hover:bg-gray-50 cursor-pointer" 
-                        onClick={() => navigate(`/students/${student.id}`)}>
-                  <TableCell className="font-medium">{student.student_id}</TableCell>
-                  <TableCell>{student.full_name}</TableCell>
-                  <TableCell>{student.department}</TableCell>
-                  <TableCell>{student.academic_year}</TableCell>
-                  <TableCell>{student.gpa}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      student.status === 'cleared' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {student.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/students/${student.id}`);
-                            }}>
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="p-6 min-h-80 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-gray-500 mb-2">No students found</p>
-              <p className="text-sm text-gray-400">Try adjusting your filters or add new students</p>
-            </div>
-          </div>
-        )}
+        <StudentTable students={filteredStudents} isLoading={isLoading} />
       </div>
     </div>
   );
