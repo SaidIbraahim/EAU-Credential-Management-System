@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Upload, AlertCircle, X } from "lucide-react";
+import { Upload, AlertCircle, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Student } from "@/types";
@@ -32,6 +32,29 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
         setZipFile(e.target.files[0]);
       }
     }
+  };
+  
+  const handleDownloadTemplate = () => {
+    // CSV header row and sample data
+    const csvContent = [
+      "student_id,certificate_id,full_name,gender,phone_number,department,academic_year,gpa,grade,admission_date,graduation_date,status",
+      "EAUGRW000123,,Fadumo Ahmed,female,+252612345678,Computer Science,First Year,3.5,A,2023-09-01,2027-06-30,un-cleared",
+      "EAUGRW000124,,Ahmed Mohamed,male,+252612345679,Business Administration,Second Year,3.8,A,2022-09-01,2026-06-30,cleared"
+    ].join("\n");
+    
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+    
+    // Create a download link and trigger the download
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "student_import_template.csv";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Template downloaded successfully");
   };
   
   const handleImport = async () => {
@@ -137,6 +160,17 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
           <p className="text-sm text-gray-500 mb-4">
             Upload a CSV file containing student information. The file should include columns for Full Name, Student ID, Certificate ID, Gender, Phone Number, Department, Academic Year, GPA, Grade, Admission Date, Graduation Date, and Status.
           </p>
+          
+          <div className="flex justify-end mb-4">
+            <Button 
+              variant="outline"
+              className="flex items-center gap-2 text-primary-500"
+              onClick={handleDownloadTemplate}
+            >
+              <Download size={16} />
+              Download Template
+            </Button>
+          </div>
           
           <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center">
             <Upload className="mx-auto h-10 w-10 text-gray-400 mb-4" />
