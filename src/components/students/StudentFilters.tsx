@@ -122,7 +122,7 @@ const StudentFilters = ({
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Departments</SelectItem>
+                    <SelectItem value="all_departments">All Departments</SelectItem>
                     {DEPARTMENTS.map((dept) => (
                       <SelectItem key={dept.id} value={dept.name}>
                         {dept.name}
@@ -142,7 +142,7 @@ const StudentFilters = ({
                     <SelectValue placeholder="Select year" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Years</SelectItem>
+                    <SelectItem value="all_years">All Years</SelectItem>
                     {ACADEMIC_YEARS.map((year) => (
                       <SelectItem key={year.id} value={year.academic_year}>
                         {year.academic_year}
@@ -162,7 +162,7 @@ const StudentFilters = ({
                     <SelectValue placeholder="Select GPA range" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All GPAs</SelectItem>
+                    <SelectItem value="all_gpas">All GPAs</SelectItem>
                     {gpaRanges.map((range) => (
                       <SelectItem key={range.value} value={range.value}>
                         {range.label}
@@ -182,7 +182,7 @@ const StudentFilters = ({
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="all_statuses">All Status</SelectItem>
                     {statuses.map((status) => (
                       <SelectItem key={status.value} value={status.value}>
                         {status.label}
@@ -202,7 +202,7 @@ const StudentFilters = ({
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Genders</SelectItem>
+                    <SelectItem value="all_genders">All Genders</SelectItem>
                     {genders.map((gender) => (
                       <SelectItem key={gender.value} value={gender.value}>
                         {gender.label}

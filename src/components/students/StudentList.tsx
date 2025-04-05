@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Download } from "lucide-react";
@@ -91,11 +92,26 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
       }
     }
     
-    const matchesDepartment = !filters.department || student.department === filters.department;
-    const matchesStatus = !filters.status || student.status === filters.status;
-    const matchesAcademicYear = !filters.academicYear || student.academic_year === filters.academicYear;
-    const matchesGpa = !filters.gpaRange || getGpaRangeFilter(student.gpa, filters.gpaRange);
-    const matchesGender = !filters.gender || student.gender === filters.gender;
+    // Update filter logic to handle the new "all_*" values
+    const matchesDepartment = !filters.department || 
+                             filters.department === "all_departments" || 
+                             student.department === filters.department;
+    
+    const matchesStatus = !filters.status || 
+                         filters.status === "all_statuses" || 
+                         student.status === filters.status;
+    
+    const matchesAcademicYear = !filters.academicYear || 
+                               filters.academicYear === "all_years" || 
+                               student.academic_year === filters.academicYear;
+    
+    const matchesGpa = !filters.gpaRange || 
+                       filters.gpaRange === "all_gpas" || 
+                       getGpaRangeFilter(student.gpa, filters.gpaRange);
+    
+    const matchesGender = !filters.gender || 
+                         filters.gender === "all_genders" || 
+                         student.gender === filters.gender;
     
     return matchesSearch && matchesDepartment && matchesStatus && 
            matchesAcademicYear && matchesGpa && matchesGender;
