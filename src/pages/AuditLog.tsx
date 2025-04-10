@@ -1,59 +1,22 @@
+
 import { useState } from "react";
 import { ClipboardList, Download, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuditLog as AuditLogType } from "@/types";
-
-// Mock data for audit logs
-const mockAuditLogs: AuditLogType[] = [
-  {
-    id: 1,
-    user_id: 1,
-    action: "Student Added",
-    details: "Added student 'Halima Abdi' with ID 'EAGRW001235'",
-    timestamp: new Date(2023, 5, 10, 9, 30)
-  },
-  {
-    id: 2,
-    user_id: 2,
-    action: "Bulk Import",
-    details: "Imported 25 students from CSV file",
-    timestamp: new Date(2023, 5, 9, 14, 15)
-  },
-  {
-    id: 3,
-    user_id: 1,
-    action: "Student Updated",
-    details: "Updated information for student 'Jane Smith' with ID 'ST2023005'",
-    timestamp: new Date(2023, 5, 8, 11, 45)
-  },
-  {
-    id: 4,
-    user_id: 3,
-    action: "Document Uploaded",
-    details: "Uploaded transcript for student with ID 'ST2023010'",
-    timestamp: new Date(2023, 5, 7, 16, 20)
-  },
-  {
-    id: 5,
-    user_id: 2,
-    action: "Student Deleted",
-    details: "Removed student 'Alex Johnson' with ID 'ST2023015'",
-    timestamp: new Date(2023, 5, 6, 10, 5)  // Fixed: Changed '10, 05' to '10, 5'
-  }
-];
+import { MOCK_AUDIT_LOGS } from "@/mock/auditLogs";
 
 // Mock user data to map user_id to username
 const mockUsers = {
   1: "admin",
   2: "super_admin",
-  3: "john.doe"
+  3: "faarax.cabdullaahi"
 };
 
 const AuditLogPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [logs, setLogs] = useState<AuditLogType[]>(mockAuditLogs);
+  const [logs, setLogs] = useState<AuditLogType[]>(MOCK_AUDIT_LOGS);
 
   const filteredLogs = logs.filter(log => 
     log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +24,7 @@ const AuditLogPage = () => {
   );
 
   const getUserName = (userId: number) => {
-    return mockUsers[userId as keyof typeof mockUsers] || `User ${userId}`;
+    return mockUsers[userId as keyof typeof mockUsers] || `Isticmaale ${userId}`;
   };
 
   const formatDate = (date: Date) => {
@@ -77,15 +40,15 @@ const AuditLogPage = () => {
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto w-full animation-fade-in">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Audit Log</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Diiwaanka Hawlaha</h2>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
             <Filter className="mr-2 h-4 w-4" />
-            Filter
+            Sifee
           </Button>
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
-            Export
+            Dajiso
           </Button>
         </div>
       </div>
@@ -97,7 +60,7 @@ const AuditLogPage = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
               <Input
                 type="search"
-                placeholder="Search audit logs..."
+                placeholder="Raadi diiwaanka hawlaha..."
                 className="pl-9 w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -109,10 +72,10 @@ const AuditLogPage = () => {
         <Tabs defaultValue="all" className="w-full">
           <div className="px-4 pt-2">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">All Logs</TabsTrigger>
-              <TabsTrigger value="student">Student Changes</TabsTrigger>
-              <TabsTrigger value="import">Imports</TabsTrigger>
-              <TabsTrigger value="document">Documents</TabsTrigger>
+              <TabsTrigger value="all">Dhammaan</TabsTrigger>
+              <TabsTrigger value="student">Isbedelada Ardayda</TabsTrigger>
+              <TabsTrigger value="import">Soo Dejinta</TabsTrigger>
+              <TabsTrigger value="document">Dukumentiyada</TabsTrigger>
             </TabsList>
           </div>
           
@@ -121,11 +84,11 @@ const AuditLogPage = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 text-left">
-                    <th className="px-4 py-3 font-medium text-gray-500">ID</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">User</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Action</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Details</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Timestamp</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Lambarka</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Isticmaale</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Hawsha</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Faahfaahinta</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Waqtiga</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -152,7 +115,7 @@ const AuditLogPage = () => {
                   ) : (
                     <tr>
                       <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                        No audit logs found
+                        Ma helin diiwaanka hawlaha
                       </td>
                     </tr>
                   )}
@@ -162,15 +125,15 @@ const AuditLogPage = () => {
           </TabsContent>
           
           <TabsContent value="student" className="p-4 text-center text-gray-500">
-            Filter applied: Student changes only
+            Sifaynta: Kaliya isbadelada ardayda
           </TabsContent>
           
           <TabsContent value="import" className="p-4 text-center text-gray-500">
-            Filter applied: Import operations only
+            Sifaynta: Kaliya hawlaha soo dejinta
           </TabsContent>
           
           <TabsContent value="document" className="p-4 text-center text-gray-500">
-            Filter applied: Document operations only
+            Sifaynta: Kaliya hawlaha dukumentiyada
           </TabsContent>
         </Tabs>
       </div>
