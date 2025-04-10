@@ -1,9 +1,15 @@
-
 import { useState } from "react";
 import { Student } from "@/types";
 import StudentFilters from "./StudentFilters";
 import StudentTable from "./StudentTable";
 import StudentExport from "./StudentExport";
+import { 
+  Pagination, 
+  PaginationContent, 
+  PaginationItem, 
+  PaginationNext, 
+  PaginationPrevious 
+} from "@/components/ui/pagination";
 
 interface StudentListProps {
   students: Student[];
@@ -21,6 +27,9 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
     gender: "",
   });
   const [isFilterActive, setIsFilterActive] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const studentsPerPage = 10;
   
   const getGpaRangeFilter = (gpa: number, range: string) => {
     switch (range) {
@@ -42,6 +51,7 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setIsFilterActive(true);
+    setCurrentPage(1);
   };
   
   const clearFilters = () => {
@@ -111,6 +121,23 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
            matchesAcademicYear && matchesGpa && matchesGender;
   });
   
+  const indexOfLastStudent = currentPage * studentsPerPage;
+  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
+  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+  
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
       <div className="p-4 border-b border-gray-200">
@@ -134,8 +161,36 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
       </div>
       
       <div className="overflow-x-auto">
-        <StudentTable students={filteredStudents} isLoading={isLoading} />
+        <StudentTable students={currentStudents} isLoading={isLoading} />
       </div>
+      
+      {filteredStudents.length > 0 && totalPages > 1 && (
+        <div className="p-4 border-t border-gray-200">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={handlePreviousPage} 
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              <PaginationItem className="flex items-center px-4">
+                <span className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+              </PaginationItem>
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={handleNextPage} 
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };
