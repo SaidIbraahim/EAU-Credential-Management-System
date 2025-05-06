@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Upload, AlertCircle, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,11 +34,11 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
   };
   
   const handleDownloadTemplate = () => {
-    // CSV header row and sample data
+    // Updated CSV header row and sample data to match the new format
     const csvContent = [
-      "student_id,certificate_id,full_name,gender,phone_number,department,academic_year,gpa,grade,admission_date,graduation_date,status",
-      "EAUGRW000123,,Fadumo Ahmed,female,+252612345678,Computer Science,First Year,3.5,A,2023-09-01,2027-06-30,un-cleared",
-      "EAUGRW000124,,Ahmed Mohamed,male,+252612345679,Business Administration,Second Year,3.8,A,2022-09-01,2026-06-30,cleared"
+      "registration_no,certificate_id,full_name,gender,phone_number,department,faculty,academic_year,gpa,grade,graduation_date,status",
+      "GRW-BCS-2005,8261,Fadumo Ahmed Ali,female,2.5262E+11,Computer Science,Faculty of Information Science & Technology,2020-2021,3.5,A,6/30/2027,un-cleared",
+      "GRW-BBA-2005,9236,Ahmed Mohamed Adam,male,2.5262E+11,Business Administration,Faculty of Business Administration,2019-2020,3.4,B,6/30/2026,cleared"
     ].join("\n");
     
     // Create a Blob with the CSV content
@@ -158,7 +157,7 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
         <div>
           <h3 className="text-lg font-medium mb-2">Import Student Data</h3>
           <p className="text-sm text-gray-500 mb-4">
-            Upload a CSV file containing student information. The file should include columns for Full Name, Student ID, Certificate ID, Gender, Phone Number, Department, Academic Year, GPA, Grade, Admission Date, Graduation Date, and Status.
+            Upload a CSV file containing student information. The file should include columns for Registration No, Certificate ID, Full Name, Gender, Phone Number, Department, Faculty, Academic Year, GPA, Grade, Graduation Date, and Status.
           </p>
           
           <div className="flex justify-end mb-4">
@@ -259,7 +258,7 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Student ID
+                      Registration No
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Certificate ID
@@ -272,6 +271,9 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Department
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Faculty
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Academic Year
@@ -301,6 +303,9 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {student.department}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {student.faculty}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {student.academic_year}

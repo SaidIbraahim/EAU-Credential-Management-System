@@ -1,3 +1,4 @@
+
 import Papa from 'papaparse';
 import { Student } from '@/types';
 
@@ -38,9 +39,9 @@ export const parseCSV = (file: File): Promise<Student[]> => {
             return;
           }
           
-          // Validate required columns exist
+          // Validate required columns exist - updated column names
           const firstRow = results.data[0] as any;
-          const requiredColumns = ['Student ID', 'Full Name', 'Department'];
+          const requiredColumns = ['registration_no', 'full_name', 'department'];
           const missingColumns = requiredColumns.filter(col => !(col in firstRow));
           
           if (missingColumns.length > 0) {
@@ -53,28 +54,29 @@ export const parseCSV = (file: File): Promise<Student[]> => {
           const studentIds = new Set<string>();
           
           const students = results.data.map((row: any, index: number) => {
-            // Convert CSV data to Student type with additional validation
+            // Convert CSV data to Student type with additional validation - updated field mappings
             const student: Partial<Student> = {
               id: index + 1, // Temporary ID until saved to database
-              student_id: row['Student ID']?.trim() || '',
-              certificate_id: row['Certificate ID']?.trim() || '',
-              full_name: row['Full Name']?.trim() || '',
-              gender: (row['Gender']?.toLowerCase() === 'male' ? 'male' : 'female') as 'male' | 'female',
-              phone_number: row['Phone Number']?.trim() || '',
-              department: row['Department']?.trim() || '',
-              academic_year: row['Academic Year']?.trim() || '',
-              gpa: parseFloat(row['GPA']) || 0,
-              grade: row['Grade']?.trim() || '',
-              admission_date: row['Admission Date'] ? new Date(row['Admission Date']) : new Date(),
-              graduation_date: row['Graduation Date'] ? new Date(row['Graduation Date']) : undefined,
-              status: (row['Status']?.toLowerCase() === 'cleared' ? 'cleared' : 'un-cleared') as 'cleared' | 'un-cleared',
+              student_id: row['registration_no']?.trim() || '',
+              certificate_id: row['certificate_id']?.trim() || '',
+              full_name: row['full_name']?.trim() || '',
+              gender: (row['gender']?.toLowerCase() === 'male' ? 'male' : 'female') as 'male' | 'female',
+              phone_number: row['phone_number']?.trim() || '',
+              department: row['department']?.trim() || '',
+              faculty: row['faculty']?.trim() || '',
+              academic_year: row['academic_year']?.trim() || '',
+              gpa: parseFloat(row['gpa']) || 0,
+              grade: row['grade']?.trim() || '',
+              admission_date: new Date(), // Default to current date since it's not in the template
+              graduation_date: row['graduation_date'] ? new Date(row['graduation_date']) : undefined,
+              status: (row['status']?.toLowerCase() === 'cleared' ? 'cleared' : 'un-cleared') as 'cleared' | 'un-cleared',
               created_at: new Date(),
               updated_at: new Date(),
             };
 
             // Validate student_id is not empty for each row
             if (!student.student_id) {
-              throw new Error(`Row ${index + 1}: Student ID is required`);
+              throw new Error(`Row ${index + 1}: Registration No is required`);
             }
 
             // Validate full_name is not empty for each row
@@ -94,7 +96,7 @@ export const parseCSV = (file: File): Promise<Student[]> => {
             
             // Check for duplicate student IDs within the CSV file
             if (studentIds.has(student.student_id)) {
-              throw new Error(`Row ${index + 1}: Duplicate Student ID: ${student.student_id} found in the CSV file`);
+              throw new Error(`Row ${index + 1}: Duplicate Registration No: ${student.student_id} found in the CSV file`);
             }
             studentIds.add(student.student_id);
             

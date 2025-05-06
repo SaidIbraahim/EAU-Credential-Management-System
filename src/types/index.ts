@@ -7,6 +7,7 @@ export interface Student {
   gender: 'male' | 'female';
   phone_number?: string;
   department: string;
+  faculty?: string;
   academic_year: string;
   gpa: number;
   grade: string;
