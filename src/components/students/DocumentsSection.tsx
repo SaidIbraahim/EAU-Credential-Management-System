@@ -44,7 +44,7 @@ const DocumentsSection = memo(({ files, setFiles }: DocumentsSectionProps) => {
           files={files.photo}
           onAddFiles={(newFiles) => handleAddFiles('photo', newFiles)}
           onRemoveFile={(index) => handleRemoveFile('photo', index)}
-          required={true}
+          required={false}
         />
         
         <DocumentUploader

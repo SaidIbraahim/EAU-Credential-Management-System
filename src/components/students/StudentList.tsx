@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Student } from "@/types";
 import StudentFilters from "./StudentFilters";
 import StudentTable from "./StudentTable";
@@ -14,9 +15,18 @@ import {
 interface StudentListProps {
   students: Student[];
   isLoading: boolean;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
-const StudentList = ({ students, isLoading }: StudentListProps) => {
+const StudentList = ({ 
+  students, 
+  isLoading, 
+  currentPage, 
+  totalPages, 
+  onPageChange 
+}: StudentListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState("all");
   const [filters, setFilters] = useState({
@@ -27,9 +37,11 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
     gender: "",
   });
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const [filteredStudents, setFilteredStudents] = useState<Student[]>(students);
   
-  const [currentPage, setCurrentPage] = useState(1);
-  const studentsPerPage = 10;
+  useEffect(() => {
+    filterStudents();
+  }, [students, searchQuery, searchField, filters]);
   
   const getGpaRangeFilter = (gpa: number, range: string) => {
     switch (range) {
@@ -51,7 +63,7 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
   const handleFilterChange = (key: keyof typeof filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setIsFilterActive(true);
-    setCurrentPage(1);
+    onPageChange(1);
   };
   
   const clearFilters = () => {
@@ -73,68 +85,68 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
   
   const activeFilterCount = getActiveFilterCount();
   
-  const filteredStudents = students.filter(student => {
-    let matchesSearch = true;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      switch (searchField) {
-        case "student_id":
-          matchesSearch = student.student_id.toLowerCase().includes(query);
-          break;
-        case "full_name":
-          matchesSearch = student.full_name.toLowerCase().includes(query);
-          break;
-        case "certificate_id":
-          matchesSearch = student.certificate_id?.toLowerCase().includes(query) || false;
-          break;
-        case "all":
-        default:
-          matchesSearch = 
-            student.full_name.toLowerCase().includes(query) ||
-            student.student_id.toLowerCase().includes(query) ||
-            (student.certificate_id?.toLowerCase().includes(query) || false) ||
-            student.department.toLowerCase().includes(query);
+  const filterStudents = () => {
+    const filtered = students.filter(student => {
+      let matchesSearch = true;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        switch (searchField) {
+          case "registration_no":
+            matchesSearch = student.student_id.toLowerCase().includes(query);
+            break;
+          case "full_name":
+            matchesSearch = student.full_name.toLowerCase().includes(query);
+            break;
+          case "certificate_id":
+            matchesSearch = student.certificate_id?.toLowerCase().includes(query) || false;
+            break;
+          case "all":
+          default:
+            matchesSearch = 
+              student.full_name.toLowerCase().includes(query) ||
+              student.student_id.toLowerCase().includes(query) ||
+              (student.certificate_id?.toLowerCase().includes(query) || false) ||
+              student.department.toLowerCase().includes(query);
+        }
       }
-    }
+      
+      const matchesDepartment = !filters.department || 
+                              filters.department === "all_departments" || 
+                              student.department === filters.department;
+      
+      const matchesStatus = !filters.status || 
+                          filters.status === "all_statuses" || 
+                          student.status === filters.status;
+      
+      const matchesAcademicYear = !filters.academicYear || 
+                                filters.academicYear === "all_years" || 
+                                student.academic_year === filters.academicYear;
+      
+      const matchesGpa = !filters.gpaRange || 
+                        filters.gpaRange === "all_gpas" || 
+                        getGpaRangeFilter(student.gpa, filters.gpaRange);
+      
+      const matchesGender = !filters.gender || 
+                          filters.gender === "all_genders" || 
+                          student.gender === filters.gender;
+      
+      return matchesSearch && matchesDepartment && matchesStatus && 
+            matchesAcademicYear && matchesGpa && matchesGender;
+    });
     
-    const matchesDepartment = !filters.department || 
-                             filters.department === "all_departments" || 
-                             student.department === filters.department;
-    
-    const matchesStatus = !filters.status || 
-                         filters.status === "all_statuses" || 
-                         student.status === filters.status;
-    
-    const matchesAcademicYear = !filters.academicYear || 
-                               filters.academicYear === "all_years" || 
-                               student.academic_year === filters.academicYear;
-    
-    const matchesGpa = !filters.gpaRange || 
-                       filters.gpaRange === "all_gpas" || 
-                       getGpaRangeFilter(student.gpa, filters.gpaRange);
-    
-    const matchesGender = !filters.gender || 
-                         filters.gender === "all_genders" || 
-                         student.gender === filters.gender;
-    
-    return matchesSearch && matchesDepartment && matchesStatus && 
-           matchesAcademicYear && matchesGpa && matchesGender;
-  });
-  
-  const indexOfLastStudent = currentPage * studentsPerPage;
-  const indexOfFirstStudent = indexOfLastStudent - studentsPerPage;
-  const currentStudents = filteredStudents.slice(indexOfFirstStudent, indexOfLastStudent);
-  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+    setFilteredStudents(filtered);
+    setIsFilterActive(activeFilterCount > 0);
+  };
   
   const handlePreviousPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+      onPageChange(currentPage - 1);
     }
   };
   
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+      onPageChange(currentPage + 1);
     }
   };
   
@@ -161,36 +173,34 @@ const StudentList = ({ students, isLoading }: StudentListProps) => {
       </div>
       
       <div className="overflow-x-auto">
-        <StudentTable students={currentStudents} isLoading={isLoading} />
+        <StudentTable students={filteredStudents} isLoading={isLoading} />
       </div>
       
-      {filteredStudents.length > 0 && totalPages > 1 && (
-        <div className="p-4 border-t border-gray-200">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={handlePreviousPage} 
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              <PaginationItem className="flex items-center px-4">
-                <span className="text-sm text-gray-600">
-                  Page {currentPage} of {totalPages}
-                </span>
-              </PaginationItem>
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={handleNextPage} 
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <div className="p-4 border-t border-gray-200">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={handlePreviousPage} 
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            
+            <PaginationItem className="flex items-center px-4">
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+            </PaginationItem>
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={handleNextPage} 
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { Student, Document, AuditLog, User } from '@/types';
 import { toast } from "sonner";
 import { MOCK_STUDENTS } from '@/mock/students';
@@ -55,8 +54,13 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 export const studentsApi = {
   getAll: async (page = 1, limit = 10, filters = {}): Promise<{ data: Student[], total: number }> => {
     try {
+      // Simulate pagination with mock data
+      const startIndex = (page - 1) * limit;
+      const endIndex = startIndex + limit;
+      const paginatedStudents = MOCK_STUDENTS.slice(startIndex, endIndex);
+      
       return { 
-        data: MOCK_STUDENTS,
+        data: paginatedStudents,
         total: MOCK_STUDENTS.length
       };
     } catch (error) {

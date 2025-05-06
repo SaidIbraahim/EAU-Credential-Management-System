@@ -11,7 +11,7 @@ export interface Student {
   academic_year: string;
   gpa: number;
   grade: string;
-  admission_date: Date;
+  admission_date?: Date;
   graduation_date?: Date;
   status: 'cleared' | 'un-cleared';
   created_at: Date;

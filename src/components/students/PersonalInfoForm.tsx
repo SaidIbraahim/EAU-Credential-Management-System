@@ -28,10 +28,10 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
       
       <FormField
         control={control}
-        name="student_id"
+        name="registration_no"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Student ID *</FormLabel>
+            <FormLabel>Registration Number *</FormLabel>
             <FormControl>
               <Input placeholder="e.g EAUGRW0001234" {...field} />
             </FormControl>
@@ -48,10 +48,13 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
         name="certificate_id"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Certificate ID *</FormLabel>
+            <FormLabel>Certificate Serial No</FormLabel>
             <FormControl>
-              <Input placeholder="CERT2023123" {...field} />
+              <Input placeholder="e.g 1452" {...field} />
             </FormControl>
+            <FormDescription>
+              Four-digit certificate number
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -92,6 +95,20 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
             <FormLabel>Phone Number</FormLabel>
             <FormControl>
               <Input placeholder="+252907845512" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="faculty"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Faculty</FormLabel>
+            <FormControl>
+              <Input placeholder="e.g Engineering" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

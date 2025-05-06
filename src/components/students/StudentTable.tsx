@@ -35,9 +35,10 @@ const StudentTable = ({ students, isLoading }: StudentTableProps) => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Student ID</TableHead>
+          <TableHead>Registration No</TableHead>
           <TableHead>Full Name</TableHead>
           <TableHead>Department</TableHead>
+          <TableHead>Faculty</TableHead>
           <TableHead>Academic Year</TableHead>
           <TableHead>GPA</TableHead>
           <TableHead>Status</TableHead>
@@ -51,6 +52,7 @@ const StudentTable = ({ students, isLoading }: StudentTableProps) => {
             <TableCell className="font-medium">{student.student_id}</TableCell>
             <TableCell>{student.full_name}</TableCell>
             <TableCell>{student.department}</TableCell>
+            <TableCell>{student.faculty || '-'}</TableCell>
             <TableCell>{student.academic_year}</TableCell>
             <TableCell>{student.gpa}</TableCell>
             <TableCell>

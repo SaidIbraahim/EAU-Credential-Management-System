@@ -3,19 +3,20 @@ import * as z from "zod";
 
 export const formSchema = z.object({
   full_name: z.string().min(3, { message: "Name must be at least 3 characters" }),
-  student_id: z.string()
-    .min(8, { message: "Student ID must be at least 8 characters" })
+  registration_no: z.string()
+    .min(8, { message: "Registration Number must be at least 8 characters" })
     .refine(id => /^[A-Za-z0-9-]+$/.test(id), {
-      message: "Student ID can only contain letters, numbers, and hyphens"
+      message: "Registration Number can only contain letters, numbers, and hyphens"
     }),
   certificate_id: z.string()
-    .min(1, { message: "Certificate ID is required" })
-    .refine(id => /^[A-Za-z0-9-]+$/.test(id), {
-      message: "Certificate ID can only contain letters, numbers, and hyphens"
+    .optional()
+    .refine(id => !id || /^\d{4}$/.test(id), {
+      message: "Certificate Serial No must be a four-digit number"
     }),
   gender: z.enum(["male", "female"]),
   phone_number: z.string().optional(),
   department_id: z.string(),
+  faculty: z.string().optional(),
   academic_year_id: z.string(),
   gpa: z.coerce.number()
     .min(0, { message: "GPA must be at least 0" })
@@ -24,9 +25,6 @@ export const formSchema = z.object({
     .optional()
     .or(z.literal('')),
   grade: z.string({ required_error: "Grade is required" }),
-  admission_date: z.date({
-    required_error: "Admission date is required",
-  }),
   graduation_date: z.date({
     required_error: "Graduation date is required",
   }).refine(date => {
