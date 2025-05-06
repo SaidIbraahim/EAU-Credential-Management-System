@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -69,7 +70,7 @@ const StudentDetail = () => {
         academic_year: '',
         gpa: 0,
         grade: '',
-        admission_date: new Date(),
+        graduation_date: new Date(),
         status: 'un-cleared',
         created_at: new Date(),
         updated_at: new Date()
@@ -461,7 +462,7 @@ const StudentDetail = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <Label htmlFor="student_id">Student ID</Label>
+                      <Label htmlFor="student_id">Registration Number</Label>
                       {isEditing ? (
                         <div className="flex items-center mt-1">
                           <User className="h-4 w-4 mr-2 text-gray-400" />
@@ -470,7 +471,7 @@ const StudentDetail = () => {
                             name="student_id"
                             value={student.student_id}
                             onChange={handleInputChange}
-                            placeholder="Enter student ID"
+                            placeholder="e.g. GRW-BCS-2005"
                           />
                         </div>
                       ) : (
@@ -478,6 +479,34 @@ const StudentDetail = () => {
                           <User className="h-4 w-4 mr-2 text-gray-400" />
                           <span>{student.student_id || "—"}</span>
                         </div>
+                      )}
+                      {isEditing && (
+                        <p className="text-xs text-gray-500 mt-1">Format: GRW-BCS-2005, GRW-BBA-2005, etc.</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="certificate_id">Certificate Serial No</Label>
+                      {isEditing ? (
+                        <div className="flex items-center mt-1">
+                          <Award className="h-4 w-4 mr-2 text-gray-400" />
+                          <Input
+                            id="certificate_id"
+                            name="certificate_id"
+                            value={student.certificate_id || ''}
+                            onChange={handleInputChange}
+                            placeholder="e.g. 8261"
+                            maxLength={4}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center mt-1 p-2 bg-gray-50 rounded-md border border-gray-200">
+                          <Award className="h-4 w-4 mr-2 text-gray-400" />
+                          <span>{student.certificate_id || "—"}</span>
+                        </div>
+                      )}
+                      {isEditing && (
+                        <p className="text-xs text-gray-500 mt-1">Four-digit certificate number</p>
                       )}
                     </div>
 
@@ -572,6 +601,27 @@ const StudentDetail = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div>
+                      <Label htmlFor="faculty">Faculty</Label>
+                      {isEditing ? (
+                        <div className="flex items-center mt-1">
+                          <BookOpen className="h-4 w-4 mr-2 text-gray-400" />
+                          <Input
+                            id="faculty"
+                            name="faculty"
+                            value={student.faculty || ''}
+                            onChange={handleInputChange}
+                            placeholder="Enter faculty"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center mt-1 p-2 bg-gray-50 rounded-md border border-gray-200">
+                          <BookOpen className="h-4 w-4 mr-2 text-gray-400" />
+                          <span>{student.faculty || "—"}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div>
                       <Label htmlFor="department">Department</Label>
                       {isEditing ? (
                         <div className="flex items-center mt-1">
@@ -609,27 +659,6 @@ const StudentDetail = () => {
                         <div className="flex items-center mt-1 p-2 bg-gray-50 rounded-md border border-gray-200">
                           <Calendar className="h-4 w-4 mr-2 text-gray-400" />
                           <span>{student.academic_year || "—"}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="certificate_id">Certificate ID</Label>
-                      {isEditing ? (
-                        <div className="flex items-center mt-1">
-                          <Award className="h-4 w-4 mr-2 text-gray-400" />
-                          <Input
-                            id="certificate_id"
-                            name="certificate_id"
-                            value={student.certificate_id || ''}
-                            onChange={handleInputChange}
-                            placeholder="Enter certificate ID"
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center mt-1 p-2 bg-gray-50 rounded-md border border-gray-200">
-                          <Award className="h-4 w-4 mr-2 text-gray-400" />
-                          <span>{student.certificate_id || "—"}</span>
                         </div>
                       )}
                     </div>
@@ -702,41 +731,12 @@ const StudentDetail = () => {
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-primary-500" />
-                  Important Dates
+                  Important Dates & Status
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <Label htmlFor="admission_date">Admission Date</Label>
-                      {isEditing ? (
-                        <div className="flex items-center mt-1">
-                          <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                          <Input
-                            id="admission_date"
-                            name="admission_date"
-                            type="date"
-                            value={student.admission_date 
-                              ? new Date(student.admission_date).toISOString().split('T')[0] 
-                              : ''
-                            }
-                            onChange={handleInputChange}
-                          />
-                        </div>
-                      ) : (
-                        <div className="flex items-center mt-1 p-2 bg-gray-50 rounded-md border border-gray-200">
-                          <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                          <span>
-                            {student.admission_date 
-                              ? new Date(student.admission_date).toLocaleDateString() 
-                              : "—"
-                            }
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
                     <div>
                       <Label htmlFor="graduation_date">Graduation Date</Label>
                       {isEditing ? (

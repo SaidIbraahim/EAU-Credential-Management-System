@@ -4,6 +4,8 @@ import { Input } from "../ui/input";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Control } from "react-hook-form";
 import { FormValues } from "./formSchema";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
+import { FACULTIES } from "@/mock/academicData";
 
 interface PersonalInfoFormProps {
   control: Control<FormValues>;
@@ -28,15 +30,15 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
       
       <FormField
         control={control}
-        name="student_id"
+        name="registration_no"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Student ID *</FormLabel>
+            <FormLabel>Registration Number *</FormLabel>
             <FormControl>
-              <Input placeholder="e.g EAUGRW0001234" {...field} />
+              <Input placeholder="e.g GRW-BCS-2005" {...field} />
             </FormControl>
             <FormDescription>
-              Unique identifier for the student
+              Format: GRW-BCS-2005, GRW-BBA-2005, etc.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -48,10 +50,13 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
         name="certificate_id"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Certificate ID *</FormLabel>
+            <FormLabel>Certificate Serial No</FormLabel>
             <FormControl>
-              <Input placeholder="CERT2023123" {...field} />
+              <Input placeholder="e.g 8261" maxLength={4} {...field} />
             </FormControl>
+            <FormDescription>
+              Four-digit certificate number
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -93,6 +98,34 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
             <FormControl>
               <Input placeholder="+252907845512" {...field} />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="faculty_id"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Faculty</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a faculty" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {FACULTIES.map((faculty) => (
+                  <SelectItem 
+                    key={faculty.id} 
+                    value={faculty.id.toString()}
+                  >
+                    {faculty.name} ({faculty.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}

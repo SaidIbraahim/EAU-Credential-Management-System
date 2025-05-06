@@ -35,11 +35,13 @@ const StudentTable = ({ students, isLoading }: StudentTableProps) => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Student ID</TableHead>
+          <TableHead>Registration No</TableHead>
           <TableHead>Full Name</TableHead>
           <TableHead>Department</TableHead>
+          <TableHead>Faculty</TableHead>
           <TableHead>Academic Year</TableHead>
           <TableHead>GPA</TableHead>
+          <TableHead>Grade</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
@@ -51,8 +53,10 @@ const StudentTable = ({ students, isLoading }: StudentTableProps) => {
             <TableCell className="font-medium">{student.student_id}</TableCell>
             <TableCell>{student.full_name}</TableCell>
             <TableCell>{student.department}</TableCell>
+            <TableCell>{student.faculty || '-'}</TableCell>
             <TableCell>{student.academic_year}</TableCell>
             <TableCell>{student.gpa}</TableCell>
+            <TableCell>{student.grade || '-'}</TableCell>
             <TableCell>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 student.status === 'cleared' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'

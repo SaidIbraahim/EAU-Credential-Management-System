@@ -1,4 +1,3 @@
-
 export interface Student {
   id: number;
   student_id: string;
@@ -7,10 +6,11 @@ export interface Student {
   gender: 'male' | 'female';
   phone_number?: string;
   department: string;
+  faculty?: string;
   academic_year: string;
   gpa: number;
   grade: string;
-  admission_date: Date;
+  admission_date?: Date;
   graduation_date?: Date;
   status: 'cleared' | 'un-cleared';
   created_at: Date;
@@ -57,6 +57,15 @@ export interface User {
   id: number;
   username: string;
   role: 'admin' | 'super_admin';
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface Faculty {
+  id: number;
+  name: string;
+  code: string;
+  description?: string;
   created_at: Date;
   updated_at: Date;
 }

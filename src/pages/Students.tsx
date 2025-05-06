@@ -20,6 +20,8 @@ const Students = () => {
   const queryParams = new URLSearchParams(location.search);
   const tabFromUrl = queryParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabFromUrl || "list");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   
   useEffect(() => {
     if (activeTab !== "list") {
@@ -36,14 +38,15 @@ const Students = () => {
   }, [tabFromUrl]);
   
   useEffect(() => {
-    fetchStudents();
-  }, []);
+    fetchStudents(page);
+  }, [page]);
   
-  const fetchStudents = async () => {
+  const fetchStudents = async (currentPage = 1) => {
     setIsLoading(true);
     try {
-      const { data } = await studentsApi.getAll();
+      const { data, total } = await studentsApi.getAll(currentPage, 10);
       setStudents(data);
+      setTotalPages(Math.ceil(total / 10));
     } catch (error) {
       console.error("Error fetching students:", error);
       toast.error("Error loading students");
@@ -58,7 +61,8 @@ const Students = () => {
   };
   
   const handleRegistrationSuccess = () => {
-    fetchStudents();
+    fetchStudents(1);
+    setPage(1);
     toast.success("Student registered successfully!");
     setActiveTab("list");
   };
@@ -68,8 +72,13 @@ const Students = () => {
   };
   
   const handleImportSuccess = () => {
-    fetchStudents();
+    fetchStudents(1);
+    setPage(1);
     setActiveTab("list");
+  };
+  
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   return (
@@ -93,7 +102,13 @@ const Students = () => {
         </TabsList>
         
         <TabsContent value="list" className="animation-fade-in">
-          <StudentList students={students} isLoading={isLoading} />
+          <StudentList 
+            students={students} 
+            isLoading={isLoading} 
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
         </TabsContent>
         
         <TabsContent value="import" className="animation-fade-in">

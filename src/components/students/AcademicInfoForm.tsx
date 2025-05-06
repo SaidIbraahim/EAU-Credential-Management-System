@@ -1,3 +1,4 @@
+
 import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "../ui/form";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
@@ -162,49 +163,6 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
       
       <FormField
         control={control}
-        name="admission_date"
-        render={({ field }) => (
-          <FormItem className="flex flex-col">
-            <FormLabel>Admission Date *</FormLabel>
-            <Popover>
-              <PopoverTrigger asChild>
-                <FormControl>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full pl-3 text-left font-normal",
-                      !field.value && "text-muted-foreground"
-                    )}
-                  >
-                    {field.value ? (
-                      format(field.value, "PPP")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </FormControl>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={field.onChange}
-                  fromYear={fromYear}
-                  toYear={currentYear}
-                  captionLayout="dropdown-buttons"
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={control}
         name="graduation_date"
         render={({ field }) => (
           <FormItem className="flex flex-col">
@@ -233,9 +191,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
                   mode="single"
                   selected={field.value}
                   onSelect={field.onChange}
-                  fromYear={fromYear}
-                  toYear={currentYear + 5} // Allow selecting future dates for graduation
-                  captionLayout="dropdown-buttons"
+                  disabled={(date) => date > new Date() || date < new Date(fromYear, 0, 1)}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />

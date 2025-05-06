@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +16,7 @@ import PersonalInfoForm from "./PersonalInfoForm";
 import AcademicInfoForm from "./AcademicInfoForm";
 import DocumentsSection from "./DocumentsSection";
 import { formSchema, FormValues } from "./formSchema";
-import { DEPARTMENTS, ACADEMIC_YEARS } from "@/mock/academicData";
+import { DEPARTMENTS, ACADEMIC_YEARS, FACULTIES } from "@/mock/academicData";
 
 export type { FormValues };
 
@@ -43,10 +44,11 @@ const StudentRegistrationForm = ({ onSuccess, onCancel }: StudentRegistrationFor
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: "",
-      student_id: "",
+      registration_no: "",
       certificate_id: "",
       gender: "male",
       phone_number: "",
+      faculty_id: "",
       department_id: "",
       academic_year_id: "",
       grade: "",
@@ -62,42 +64,48 @@ const StudentRegistrationForm = ({ onSuccess, onCancel }: StudentRegistrationFor
       try {
         const existingStudents = await studentsApi.getAll();
         
-        // Check for duplicate student ID
-        const isDuplicateStudentId = existingStudents.data.some(
-          student => student.student_id === values.student_id
+        // Check for duplicate registration number
+        const isDuplicateRegistrationNo = existingStudents.data.some(
+          student => student.student_id === values.registration_no
         );
         
-        if (isDuplicateStudentId) {
-          setError(`Student ID "${values.student_id}" already exists.`);
+        if (isDuplicateRegistrationNo) {
+          setError(`Registration Number "${values.registration_no}" already exists.`);
           setIsSubmitting(false);
           return;
         }
         
-        // Check for duplicate certificate ID
-        const isDuplicateCertificateId = existingStudents.data.some(
-          student => student.certificate_id === values.certificate_id
-        );
-        
-        if (isDuplicateCertificateId) {
-          setError(`Certificate ID "${values.certificate_id}" already exists.`);
-          setIsSubmitting(false);
-          return;
+        // Check for duplicate certificate ID if provided
+        if (values.certificate_id) {
+          const isDuplicateCertificateId = existingStudents.data.some(
+            student => student.certificate_id === values.certificate_id
+          );
+          
+          if (isDuplicateCertificateId) {
+            setError(`Certificate Serial No "${values.certificate_id}" already exists.`);
+            setIsSubmitting(false);
+            return;
+          }
         }
       } catch (error) {
         console.error("Error checking for duplicates:", error);
       }
       
+      const facultyName = values.faculty_id 
+        ? FACULTIES.find(f => f.id.toString() === values.faculty_id)?.name 
+        : undefined;
+        
       const studentData: Omit<Student, 'id' | 'created_at' | 'updated_at'> = {
-        student_id: values.student_id,
+        student_id: values.registration_no,
         certificate_id: values.certificate_id || undefined,
         full_name: values.full_name,
         gender: values.gender,
         phone_number: values.phone_number || undefined,
+        faculty: facultyName,
         department: DEPARTMENTS.find(d => d.id.toString() === values.department_id)?.name || "",
         academic_year: ACADEMIC_YEARS.find(y => y.id.toString() === values.academic_year_id)?.academic_year || "",
         gpa: values.gpa || 0,
         grade: values.grade || "",
-        admission_date: values.admission_date,
         graduation_date: values.graduation_date,
         status: values.status,
       };

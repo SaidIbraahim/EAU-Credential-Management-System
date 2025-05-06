@@ -1,59 +1,22 @@
+
 import { useState } from "react";
 import { ClipboardList, Download, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuditLog as AuditLogType } from "@/types";
-
-// Mock data for audit logs
-const mockAuditLogs: AuditLogType[] = [
-  {
-    id: 1,
-    user_id: 1,
-    action: "Student Added",
-    details: "Added student 'Halima Abdi' with ID 'EAGRW001235'",
-    timestamp: new Date(2023, 5, 10, 9, 30)
-  },
-  {
-    id: 2,
-    user_id: 2,
-    action: "Bulk Import",
-    details: "Imported 25 students from CSV file",
-    timestamp: new Date(2023, 5, 9, 14, 15)
-  },
-  {
-    id: 3,
-    user_id: 1,
-    action: "Student Updated",
-    details: "Updated information for student 'Jane Smith' with ID 'ST2023005'",
-    timestamp: new Date(2023, 5, 8, 11, 45)
-  },
-  {
-    id: 4,
-    user_id: 3,
-    action: "Document Uploaded",
-    details: "Uploaded transcript for student with ID 'ST2023010'",
-    timestamp: new Date(2023, 5, 7, 16, 20)
-  },
-  {
-    id: 5,
-    user_id: 2,
-    action: "Student Deleted",
-    details: "Removed student 'Alex Johnson' with ID 'ST2023015'",
-    timestamp: new Date(2023, 5, 6, 10, 5)  // Fixed: Changed '10, 05' to '10, 5'
-  }
-];
+import { MOCK_AUDIT_LOGS } from "@/mock/auditLogs";
 
 // Mock user data to map user_id to username
 const mockUsers = {
   1: "admin",
   2: "super_admin",
-  3: "john.doe"
+  3: "faarax.cabdullaahi"
 };
 
 const AuditLogPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [logs, setLogs] = useState<AuditLogType[]>(mockAuditLogs);
+  const [logs, setLogs] = useState<AuditLogType[]>(MOCK_AUDIT_LOGS);
 
   const filteredLogs = logs.filter(log => 
     log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,7 +72,7 @@ const AuditLogPage = () => {
         <Tabs defaultValue="all" className="w-full">
           <div className="px-4 pt-2">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all">All Logs</TabsTrigger>
+              <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="student">Student Changes</TabsTrigger>
               <TabsTrigger value="import">Imports</TabsTrigger>
               <TabsTrigger value="document">Documents</TabsTrigger>
@@ -162,15 +125,15 @@ const AuditLogPage = () => {
           </TabsContent>
           
           <TabsContent value="student" className="p-4 text-center text-gray-500">
-            Filter applied: Student changes only
+            Filter: Student changes only
           </TabsContent>
           
           <TabsContent value="import" className="p-4 text-center text-gray-500">
-            Filter applied: Import operations only
+            Filter: Import actions only
           </TabsContent>
           
           <TabsContent value="document" className="p-4 text-center text-gray-500">
-            Filter applied: Document operations only
+            Filter: Document actions only
           </TabsContent>
         </Tabs>
       </div>

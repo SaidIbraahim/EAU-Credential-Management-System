@@ -1,12 +1,13 @@
 
-import { useState } from "react";
-import { Upload, AlertCircle, X, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Student } from "@/types";
-import { parseCSV, processZipFile, validateStudents } from "@/utils/fileUtils";
-import { studentsApi, auditLogApi } from "@/api/apiClient";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import CsvUploader from "./import/CsvUploader";
+import ZipUploader from "./import/ZipUploader";
+import ImportErrorAlert from "./import/ImportErrorAlert";
+import DuplicateWarning from "./import/DuplicateWarning";
+import StudentPreviewTable from "./import/StudentPreviewTable";
+import ImportActionButtons from "./import/ImportActionButtons";
+import { useStudentImport } from "./import/useStudentImport";
 
 interface ImportStudentsProps {
   students: Student[];
@@ -14,217 +15,34 @@ interface ImportStudentsProps {
 }
 
 const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
-  const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [zipFile, setZipFile] = useState<File | null>(null);
-  const [importedStudents, setImportedStudents] = useState<Student[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
-  const [duplicates, setDuplicates] = useState<Student[]>([]);
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: 'csv' | 'zip') => {
-    if (e.target.files && e.target.files[0]) {
-      if (fileType === 'csv') {
-        setCsvFile(e.target.files[0]);
-        setErrors([]);
-        setDuplicates([]);
-        setImportedStudents([]);
-      } else {
-        setZipFile(e.target.files[0]);
-      }
-    }
-  };
-  
-  const handleDownloadTemplate = () => {
-    // CSV header row and sample data
-    const csvContent = [
-      "student_id,certificate_id,full_name,gender,phone_number,department,academic_year,gpa,grade,admission_date,graduation_date,status",
-      "EAUGRW000123,,Fadumo Ahmed,female,+252612345678,Computer Science,First Year,3.5,A,2023-09-01,2027-06-30,un-cleared",
-      "EAUGRW000124,,Ahmed Mohamed,male,+252612345679,Business Administration,Second Year,3.8,A,2022-09-01,2026-06-30,cleared"
-    ].join("\n");
-    
-    // Create a Blob with the CSV content
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
-    
-    // Create a download link and trigger the download
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "student_import_template.csv";
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success("Template downloaded successfully");
-  };
-  
-  const handleImport = async () => {
-    if (!csvFile) {
-      toast.error("Please select a CSV file to import");
-      return;
-    }
-    
-    setIsLoading(true);
-    setErrors([]);
-    setDuplicates([]);
-    
-    try {
-      const parsedStudents = await parseCSV(csvFile);
-      
-      const { validStudents, duplicates: foundDuplicates, errors: validationErrors } = 
-        validateStudents(parsedStudents, students);
-      
-      setDuplicates(foundDuplicates);
-      
-      if (validationErrors.length > 0) {
-        setErrors(validationErrors);
-        toast.warning(`Found ${validationErrors.length} validation issues.`);
-      }
-      
-      setImportedStudents(parsedStudents);
-      
-      if (zipFile) {
-        const zipResult = await processZipFile(zipFile);
-        console.log(zipResult);
-        toast.success("ZIP file processed successfully");
-      }
-      
-      toast.success(`Successfully parsed ${parsedStudents.length} students from CSV`);
-    } catch (error) {
-      console.error("Import error:", error);
-      setErrors([`Error parsing CSV: ${error instanceof Error ? error.message : "Unknown error"}`]);
-      toast.error("Error importing students: " + (error instanceof Error ? error.message : "Unknown error"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleConfirmImport = async () => {
-    if (importedStudents.length === 0) {
-      toast.error("No students to import");
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      const studentsToImport = importedStudents.filter(
-        student => !duplicates.some(dup => dup.student_id === student.student_id)
-      );
-      
-      if (studentsToImport.length === 0) {
-        toast.error("All students are duplicates. No new students to import.");
-        setIsLoading(false);
-        return;
-      }
-      
-      const result = await studentsApi.bulkImport(studentsToImport);
-      
-      await auditLogApi.logAction("Bulk Import", `Imported ${result.count} students from CSV file`);
-      
-      toast.success(`Successfully imported ${result.count} students`);
-      
-      setCsvFile(null);
-      setZipFile(null);
-      setImportedStudents([]);
-      setErrors([]);
-      setDuplicates([]);
-      
-      onImportSuccess();
-    } catch (error) {
-      console.error("Import confirmation error:", error);
-      toast.error("Error confirming import: " + (error instanceof Error ? error.message : "Unknown error"));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    csvFile,
+    zipFile,
+    importedStudents,
+    isLoading,
+    errors,
+    duplicates,
+    handleCsvFileChange,
+    handleZipFileChange,
+    handleImport,
+    handleConfirmImport,
+    resetState
+  } = useStudentImport(students, onImportSuccess);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-      {errors.length > 0 && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-              {errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </AlertDescription>
-        </Alert>
-      )}
+      <ImportErrorAlert errors={errors} />
       
       <div className="grid grid-cols-1 gap-6">
-        <div>
-          <h3 className="text-lg font-medium mb-2">Import Student Data</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            Upload a CSV file containing student information. The file should include columns for Full Name, Student ID, Certificate ID, Gender, Phone Number, Department, Academic Year, GPA, Grade, Admission Date, Graduation Date, and Status.
-          </p>
-          
-          <div className="flex justify-end mb-4">
-            <Button 
-              variant="outline"
-              className="flex items-center gap-2 text-primary-500"
-              onClick={handleDownloadTemplate}
-            >
-              <Download size={16} />
-              Download Template
-            </Button>
-          </div>
-          
-          <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <Upload className="mx-auto h-10 w-10 text-gray-400 mb-4" />
-            <p className="text-sm text-gray-500 mb-2">
-              Drag and drop your CSV file here, or click to browse
-            </p>
-            <label className="inline-block">
-              <span className="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-primary-600 transition-colors">
-                Browse Files
-              </span>
-              <input
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={(e) => handleFileChange(e, 'csv')}
-              />
-            </label>
-            {csvFile && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected: {csvFile.name}
-              </p>
-            )}
-          </div>
-        </div>
+        <CsvUploader 
+          onFileChange={handleCsvFileChange} 
+          csvFile={csvFile} 
+        />
         
-        <div>
-          <h3 className="text-lg font-medium mb-2">Import Student Documents</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            Upload a ZIP file containing photos, transcripts, certificates, and supporting documents for students. The ZIP structure should match the student IDs in the CSV file.
-          </p>
-          
-          <div className="border border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <Upload className="mx-auto h-10 w-10 text-gray-400 mb-4" />
-            <p className="text-sm text-gray-500 mb-2">
-              Drag and drop your ZIP file here, or click to browse
-            </p>
-            <label className="inline-block">
-              <span className="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer hover:bg-primary-600 transition-colors">
-                Browse Files
-              </span>
-              <input
-                type="file"
-                accept=".zip"
-                className="hidden"
-                onChange={(e) => handleFileChange(e, 'zip')}
-              />
-            </label>
-            {zipFile && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected: {zipFile.name}
-              </p>
-            )}
-          </div>
-        </div>
+        <ZipUploader 
+          onFileChange={handleZipFileChange} 
+          zipFile={zipFile} 
+        />
         
         <div className="flex justify-end">
           <Button 
@@ -236,115 +54,18 @@ const ImportStudents = ({ students, onImportSuccess }: ImportStudentsProps) => {
           </Button>
         </div>
         
-        {duplicates.length > 0 && (
-          <Alert className="bg-yellow-50 border-yellow-200">
-            <AlertCircle className="h-4 w-4 text-yellow-600" />
-            <AlertTitle className="text-yellow-800">Warning: Duplicate Students</AlertTitle>
-            <AlertDescription className="text-yellow-700">
-              <p className="mb-2">The following students already exist in the system:</p>
-              <ul className="list-disc pl-5 space-y-1">
-                {duplicates.map((student, index) => (
-                  <li key={index}>{student.full_name} (ID: {student.student_id})</li>
-                ))}
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
+        <DuplicateWarning duplicates={duplicates} />
         
         {importedStudents.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-lg font-medium mb-4">Preview Imported Data</h3>
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Student ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Certificate ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Full Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Gender
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Department
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Academic Year
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      GPA
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {importedStudents.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {student.student_id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.certificate_id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.full_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.gender}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.department}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.academic_year}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.gpa}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          student.status === 'cleared' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {student.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="mt-4 flex justify-end">
-              <Button 
-                variant="outline" 
-                className="mr-2"
-                onClick={() => {
-                  setCsvFile(null);
-                  setZipFile(null);
-                  setImportedStudents([]);
-                  setErrors([]);
-                  setDuplicates([]);
-                }}
-                disabled={isLoading}
-              >
-                Cancel
-              </Button>
-              <Button 
-                className="bg-primary-500 hover:bg-primary-600 text-white"
-                onClick={handleConfirmImport}
-                disabled={isLoading || errors.length > 0}
-              >
-                {isLoading ? 'Processing...' : 'Confirm Import'}
-              </Button>
-            </div>
-          </div>
+          <>
+            <StudentPreviewTable students={importedStudents} />
+            <ImportActionButtons
+              isLoading={isLoading}
+              hasErrors={errors.length > 0}
+              onCancel={resetState}
+              onConfirm={handleConfirmImport}
+            />
+          </>
         )}
       </div>
     </div>
