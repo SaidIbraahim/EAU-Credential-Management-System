@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Student } from "@/types";
 import StudentFilters from "./StudentFilters";
@@ -106,7 +105,8 @@ const StudentList = ({
               student.full_name.toLowerCase().includes(query) ||
               student.student_id.toLowerCase().includes(query) ||
               (student.certificate_id?.toLowerCase().includes(query) || false) ||
-              student.department.toLowerCase().includes(query);
+              student.department.toLowerCase().includes(query) ||
+              (student.faculty?.toLowerCase().includes(query) || false);
         }
       }
       

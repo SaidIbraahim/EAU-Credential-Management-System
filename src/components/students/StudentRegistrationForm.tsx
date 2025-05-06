@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +15,7 @@ import PersonalInfoForm from "./PersonalInfoForm";
 import AcademicInfoForm from "./AcademicInfoForm";
 import DocumentsSection from "./DocumentsSection";
 import { formSchema, FormValues } from "./formSchema";
-import { DEPARTMENTS, ACADEMIC_YEARS } from "@/mock/academicData";
+import { DEPARTMENTS, ACADEMIC_YEARS, FACULTIES } from "@/mock/academicData";
 
 export type { FormValues };
 
@@ -48,7 +47,7 @@ const StudentRegistrationForm = ({ onSuccess, onCancel }: StudentRegistrationFor
       certificate_id: "",
       gender: "male",
       phone_number: "",
-      faculty: "",
+      faculty_id: "",
       department_id: "",
       academic_year_id: "",
       grade: "",
@@ -91,13 +90,17 @@ const StudentRegistrationForm = ({ onSuccess, onCancel }: StudentRegistrationFor
         console.error("Error checking for duplicates:", error);
       }
       
+      const facultyName = values.faculty_id 
+        ? FACULTIES.find(f => f.id.toString() === values.faculty_id)?.name 
+        : undefined;
+        
       const studentData: Omit<Student, 'id' | 'created_at' | 'updated_at'> = {
         student_id: values.registration_no,
         certificate_id: values.certificate_id || undefined,
         full_name: values.full_name,
         gender: values.gender,
         phone_number: values.phone_number || undefined,
-        faculty: values.faculty || undefined,
+        faculty: facultyName,
         department: DEPARTMENTS.find(d => d.id.toString() === values.department_id)?.name || "",
         academic_year: ACADEMIC_YEARS.find(y => y.id.toString() === values.academic_year_id)?.academic_year || "",
         gpa: values.gpa || 0,

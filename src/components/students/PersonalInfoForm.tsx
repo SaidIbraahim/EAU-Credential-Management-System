@@ -4,6 +4,8 @@ import { Input } from "../ui/input";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Control } from "react-hook-form";
 import { FormValues } from "./formSchema";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../ui/select";
+import { FACULTIES } from "@/mock/academicData";
 
 interface PersonalInfoFormProps {
   control: Control<FormValues>;
@@ -103,13 +105,27 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
       
       <FormField
         control={control}
-        name="faculty"
+        name="faculty_id"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Faculty</FormLabel>
-            <FormControl>
-              <Input placeholder="e.g Engineering" {...field} />
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a faculty" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {FACULTIES.map((faculty) => (
+                  <SelectItem 
+                    key={faculty.id} 
+                    value={faculty.id.toString()}
+                  >
+                    {faculty.name} ({faculty.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}

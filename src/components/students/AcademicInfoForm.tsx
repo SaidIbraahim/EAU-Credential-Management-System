@@ -191,9 +191,7 @@ const AcademicInfoForm = ({ control, departments, academicYears }: AcademicInfoF
                   mode="single"
                   selected={field.value}
                   onSelect={field.onChange}
-                  fromYear={fromYear}
-                  toYear={currentYear + 5} // Allow selecting future dates for graduation
-                  captionLayout="dropdown-buttons"
+                  disabled={(date) => date > new Date() || date < new Date(fromYear, 0, 1)}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
