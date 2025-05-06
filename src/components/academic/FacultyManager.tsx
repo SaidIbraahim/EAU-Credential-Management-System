@@ -28,7 +28,6 @@ import {
 
 // In a real application, this would be fetched from an API
 import { FACULTIES } from "@/mock/academicData";
-import { Faculty } from "@/types";
 
 const facultyFormSchema = z.object({
   name: z.string().min(2, "Faculty name is required"),
@@ -39,10 +38,10 @@ const facultyFormSchema = z.object({
 type FacultyFormValues = z.infer<typeof facultyFormSchema>;
 
 const FacultyManager = () => {
-  const [faculties, setFaculties] = useState<Faculty[]>(FACULTIES);
+  const [faculties, setFaculties] = useState(FACULTIES);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentFaculty, setCurrentFaculty] = useState<Faculty | null>(null);
+  const [currentFaculty, setCurrentFaculty] = useState<typeof faculties[0] | null>(null);
 
   const form = useForm<FacultyFormValues>({
     resolver: zodResolver(facultyFormSchema),
@@ -53,7 +52,7 @@ const FacultyManager = () => {
     },
   });
 
-  const openDialog = (faculty?: Faculty) => {
+  const openDialog = (faculty?: typeof faculties[0]) => {
     if (faculty) {
       setIsEditing(true);
       setCurrentFaculty(faculty);
@@ -85,24 +84,16 @@ const FacultyManager = () => {
       setFaculties(prevFaculties =>
         prevFaculties.map(faculty =>
           faculty.id === currentFaculty.id
-            ? { 
-                ...faculty, 
-                name: values.name, 
-                code: values.code, 
-                description: values.description, 
-                updated_at: new Date() 
-              }
+            ? { ...faculty, ...values, updated_at: new Date() }
             : faculty
         )
       );
       toast.success("Faculty updated successfully");
     } else {
       // Add new faculty
-      const newFaculty: Faculty = {
+      const newFaculty = {
         id: faculties.length + 1,
-        name: values.name,
-        code: values.code,
-        description: values.description,
+        ...values,
         created_at: new Date(),
         updated_at: new Date(),
       };
