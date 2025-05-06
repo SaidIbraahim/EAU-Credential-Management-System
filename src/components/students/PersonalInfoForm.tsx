@@ -35,10 +35,10 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
           <FormItem>
             <FormLabel>Registration Number *</FormLabel>
             <FormControl>
-              <Input placeholder="e.g EAUGRW0001234" {...field} />
+              <Input placeholder="e.g GRW-BCS-2005" {...field} />
             </FormControl>
             <FormDescription>
-              Unique identifier for the student
+              Format: GRW-BCS-2005, GRW-BBA-2005, etc.
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -52,7 +52,7 @@ const PersonalInfoForm = ({ control }: PersonalInfoFormProps) => {
           <FormItem>
             <FormLabel>Certificate Serial No</FormLabel>
             <FormControl>
-              <Input placeholder="e.g 1452" {...field} />
+              <Input placeholder="e.g 8261" maxLength={4} {...field} />
             </FormControl>
             <FormDescription>
               Four-digit certificate number

@@ -1,9 +1,13 @@
+
 import * as z from "zod";
 
 export const formSchema = z.object({
   full_name: z.string().min(2, "Full name is required"),
-  registration_no: z.string().min(3, "Registration Number is required"),
-  certificate_id: z.string().optional(),
+  registration_no: z.string().min(3, "Registration Number is required")
+    .regex(/^GRW-[A-Z]{3}-\d{4}$/, "Registration number should be in format GRW-XXX-YYYY (e.g. GRW-BCS-2005)"),
+  certificate_id: z.string()
+    .regex(/^\d{4}$/, "Certificate ID must be exactly 4 digits")
+    .optional(),
   gender: z.enum(["male", "female"]),
   phone_number: z.string().optional(),
   faculty_id: z.string().optional(),
