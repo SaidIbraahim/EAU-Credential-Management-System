@@ -444,6 +444,10 @@ export class DocumentController {
     const { GetObjectCommand } = await import('@aws-sdk/client-s3');
     const { storageClient, STORAGE_BUCKET_NAME, extractKeyFromUrl } = await import('../config/storage');
     
+    if (!storageClient) {
+      throw new AppError('Cloud storage not configured - cannot download files', 500);
+    }
+    
     const storageKey = document.fileUrl.startsWith('documents/') 
       ? document.fileUrl 
       : extractKeyFromUrl(document.fileUrl);

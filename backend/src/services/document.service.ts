@@ -155,12 +155,16 @@ export class DocumentService {
         : extractKeyFromUrl(document.fileUrl);
 
       // Delete from cloud storage
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: STORAGE_BUCKET_NAME,
-        Key: storageKey
-      });
+      if (storageClient) {
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: STORAGE_BUCKET_NAME,
+          Key: storageKey
+        });
 
-      await storageClient.send(deleteCommand);
+        await storageClient.send(deleteCommand);
+      } else {
+        console.warn('Cloud storage not configured - skipping file deletion from cloud storage');
+      }
 
       // Delete from database
       await prisma.document.delete({

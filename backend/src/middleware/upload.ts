@@ -69,6 +69,10 @@ const upload = multer({
 
 // Function to upload file to cloud storage
 export async function uploadToCloudStorage(file: Express.Multer.File): Promise<CloudStorageFile> {
+  if (!storageClient) {
+    throw new Error('Cloud storage not configured - cannot upload files');
+  }
+  
   try {
     // Handle cases where originalname might be undefined (e.g., from ZIP processing)
     const fileName = file.originalname || (file as any).name || 'unknown-file';
