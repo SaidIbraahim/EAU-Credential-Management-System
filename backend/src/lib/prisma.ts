@@ -7,12 +7,14 @@ export const prisma = new PrismaClient({
     { level: 'error', emit: 'stdout' },
     { level: 'warn', emit: 'stdout' }
   ],
-  // Connection pooling optimization
-  datasources: {
-    db: {
-      url: (process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_gJ5uoeYsh4aF@ep-bold-recipe-a1p5gxbx-pooler.ap-southeast-1.aws.neon.tech/eau_credentail_db?sslmode=require') + '&connection_limit=10&pool_timeout=20'
+  // Connection pooling optimization - DATABASE_URL must be set via environment variable
+  ...(process.env.DATABASE_URL ? {
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL + (process.env.DATABASE_URL.includes('?') ? '&' : '?') + 'connection_limit=10&pool_timeout=20'
+      }
     }
-  }
+  } : {})
 });
 
 // Performance monitoring for slow queries
