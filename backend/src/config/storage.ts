@@ -7,41 +7,59 @@ config();
 
 // Generic cloud storage configuration
 // Currently configured for Cloudflare R2, but can be easily switched to AWS S3, Google Cloud Storage, etc.
-if (!process.env.CLOUD_STORAGE_ENDPOINT || !process.env.CLOUD_STORAGE_ACCESS_KEY_ID || !process.env.CLOUD_STORAGE_SECRET_ACCESS_KEY || !process.env.CLOUD_STORAGE_BUCKET_NAME) {
-  throw new Error('Missing cloud storage configuration in environment variables. Please check CLOUD_STORAGE_* variables.');
-}
 
-// Trim credentials to remove any accidental whitespace
-const accessKeyId = process.env.CLOUD_STORAGE_ACCESS_KEY_ID.trim();
-const secretAccessKey = process.env.CLOUD_STORAGE_SECRET_ACCESS_KEY.trim();
+// Check if storage is configured
+const isStorageConfigured = !!(
+  process.env.CLOUD_STORAGE_ENDPOINT && 
+  process.env.CLOUD_STORAGE_ACCESS_KEY_ID && 
+  process.env.CLOUD_STORAGE_SECRET_ACCESS_KEY && 
+  process.env.CLOUD_STORAGE_BUCKET_NAME
+);
 
-// Validate access key length (32 for R2/S3, may vary for other providers)
-if (accessKeyId.length !== 32) {
-  throw new Error(`Cloud Storage Access Key ID has invalid length: ${accessKeyId.length}, expected 32 characters`);
-}
-
-// Validate secret access key length (64 for R2/S3, may vary for other providers)
-if (secretAccessKey.length !== 64) {
-  throw new Error(`Cloud Storage Secret Access Key has invalid length: ${secretAccessKey.length}, expected 64 characters`);
-}
-
-// S3-compatible client (works with R2, AWS S3, MinIO, etc.)
-export const storageClient = new S3Client({
-  region: process.env.CLOUD_STORAGE_REGION || 'auto', // 'auto' for R2, specific region for AWS
-  endpoint: process.env.CLOUD_STORAGE_ENDPOINT.trim(),
-  credentials: {
-    accessKeyId: accessKeyId,
-    secretAccessKey: secretAccessKey
-  },
-  // Force path-style addressing for compatibility with different providers
-  forcePathStyle: process.env.CLOUD_STORAGE_FORCE_PATH_STYLE === 'true'
-});
-
-export const STORAGE_BUCKET_NAME = process.env.CLOUD_STORAGE_BUCKET_NAME.trim();
+// Storage client and configuration (only if configured)
+export let storageClient: S3Client | null = null;
+export let STORAGE_BUCKET_NAME: string = '';
 export const STORAGE_PROVIDER = process.env.CLOUD_STORAGE_PROVIDER || 'cloudflare-r2';
+
+if (isStorageConfigured) {
+  // Trim credentials to remove any accidental whitespace
+  const accessKeyId = process.env.CLOUD_STORAGE_ACCESS_KEY_ID!.trim();
+  const secretAccessKey = process.env.CLOUD_STORAGE_SECRET_ACCESS_KEY!.trim();
+
+  // Validate access key length (32 for R2/S3, may vary for other providers)
+  if (accessKeyId.length !== 32) {
+    console.warn(`Cloud Storage Access Key ID has unexpected length: ${accessKeyId.length}, expected 32 characters`);
+  }
+
+  // Validate secret access key length (64 for R2/S3, may vary for other providers)
+  if (secretAccessKey.length !== 64) {
+    console.warn(`Cloud Storage Secret Access Key has unexpected length: ${secretAccessKey.length}, expected 64 characters`);
+  }
+
+  // S3-compatible client (works with R2, AWS S3, MinIO, etc.)
+  storageClient = new S3Client({
+    region: process.env.CLOUD_STORAGE_REGION || 'auto', // 'auto' for R2, specific region for AWS
+    endpoint: process.env.CLOUD_STORAGE_ENDPOINT!.trim(),
+    credentials: {
+      accessKeyId: accessKeyId,
+      secretAccessKey: secretAccessKey
+    },
+    // Force path-style addressing for compatibility with different providers
+    forcePathStyle: process.env.CLOUD_STORAGE_FORCE_PATH_STYLE === 'true'
+  });
+
+  STORAGE_BUCKET_NAME = process.env.CLOUD_STORAGE_BUCKET_NAME!.trim();
+  console.log('✅ Cloud storage configured successfully');
+} else {
+  console.warn('⚠️ Cloud storage not configured - file uploads will be disabled');
+}
 
 // Generate presigned URL for secure access (recommended for private buckets)
 export async function generatePresignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+  if (!storageClient) {
+    throw new Error('Cloud storage not configured - cannot generate presigned URL');
+  }
+  
   try {
     const command = new GetObjectCommand({
       Bucket: STORAGE_BUCKET_NAME,
