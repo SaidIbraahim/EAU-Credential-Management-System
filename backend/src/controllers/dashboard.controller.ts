@@ -145,7 +145,7 @@ export class DashboardController {
             month: trend.month,
             count: Number(trend.count)
           })),
-          gradeDistribution: gradeDistribution.map(item => ({
+          gradeDistribution: gradeDistribution.map((item: any) => ({
             grade: item.grade,
             count: item._count.grade
           }))

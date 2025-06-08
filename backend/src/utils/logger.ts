@@ -1,7 +1,5 @@
 import winston from 'winston';
-import path from 'path';
 
-const logDir = 'logs';
 const { combine, timestamp, printf, colorize } = winston.format;
 
 // Custom log format
