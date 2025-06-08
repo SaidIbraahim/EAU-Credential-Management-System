@@ -10,7 +10,7 @@ export const prisma = new PrismaClient({
   // Connection pooling optimization
   datasources: {
     db: {
-      url: process.env.DATABASE_URL + '?connection_limit=10&pool_timeout=20'
+      url: (process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_gJ5uoeYsh4aF@ep-bold-recipe-a1p5gxbx-pooler.ap-southeast-1.aws.neon.tech/eau_credentail_db?sslmode=require') + '&connection_limit=10&pool_timeout=20'
     }
   }
 });
