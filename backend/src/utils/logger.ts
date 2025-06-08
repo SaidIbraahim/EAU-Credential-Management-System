@@ -21,35 +21,19 @@ const logger = winston.createLogger({
     logFormat
   ),
   transports: [
-    // Write all logs with importance level of 'error' or less to 'error.log'
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-    // Write all logs with importance level of 'info' or less to 'combined.log'
-    new winston.transports.File({
-      filename: path.join(logDir, 'combined.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
+    // For serverless environments (like Vercel), only use console transport
+    new winston.transports.Console({
+      format: combine(
+        colorize(),
+        logFormat
+      ),
     }),
   ],
   // Prevent winston from exiting on error
   exitOnError: false,
 });
 
-// If we're not in production, log to the console with colors
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(
-    new winston.transports.Console({
-      format: combine(
-        colorize(),
-        logFormat
-      ),
-    })
-  );
-}
+// Note: Console transport is already added above for all environments
 
 // Create a stream object with a write function that will be used by Morgan
 export const stream = {
