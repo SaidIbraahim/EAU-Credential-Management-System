@@ -54,7 +54,20 @@ app.use((req, res, next) => {
 
 // Optimized middleware stack
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration with environment variable support
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5174'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Skip-Error-Toast'],
+};
+
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json({ limit: '10mb' })); // Optimize for document uploads
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
