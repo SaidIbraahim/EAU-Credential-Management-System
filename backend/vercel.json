@@ -12,6 +12,7 @@
       "dest": "src/app.ts"
     }
   ],
+  "buildCommand": "npm run build",
   "env": {
     "NODE_ENV": "production"
   }
