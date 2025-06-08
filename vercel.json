@@ -1,5 +1,16 @@
 {
-"rewrites": [
-    {"source": "/(.*)", "destination": "/"}
-]
+    "version": 2,
+    "build": {
+        "env": {
+            "NODE_VERSION": "18.x"
+        }
+    },
+    "github": {
+        "enabled": true,
+        "autoAlias": true
+    },
+    "rewrites": [
+        {"source": "/(.*)", "destination": "/"}
+    ]
 }
+    

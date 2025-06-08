@@ -1,69 +1,610 @@
-# Welcome to your Lovable project
+Alumni Management System and Certificate Verification Portal - Comprehensive Technical Report
+Executive Summary
+The Alumni Management System at C:\Users\pc\Desktop\Certificate Verification Portal\apps\admin is a comprehensive React-based frontend application designed to manage student records, academic configurations, and documents. It serves as the administrative interface for the Certificate Verification Portal at C:\Users\pc\Desktop\Certificate Verification Portal\apps\verify, enabling staff to efficiently handle student data and academic operations.
+1. Project Overview
+Objectives
+Provide a centralized platform for managing student records and academic data
+Enable efficient student registration, document management, and academic configuration
+Support the Certificate Verification Portal with accurate student data
+Maintain audit trails and generate reports for administrative purposes
+Scope
+The current implementation includes:
+Student management (registration, bulk import, export functionalities)
+Academic configuration (departments, faculties, academic years)
+Document management system
+Audit logging
+Reports and analytics dashboard
+Certificate verification portal integration at C:\Users\pc\Desktop\Certificate Verification Portal\apps\verify
+Key Features
+Student Management: Complete CRUD operations for student records
+Bulk Import: CSV and ZIP file import capabilities
+Document Management: File upload and management for student documents
+Academic Configuration: Management of departments, faculties, and academic years
+Audit Logging: Comprehensive tracking of system activities
+Reports: Analytics and data visualization
+Responsive Design: Mobile-first approach with modern UI
 
-## Project info
+2. Technical Architecture
+Frontend Stack
+Framework: React 18.3.1 with TypeScript
+Build Tool: Vite 5.4.1
+Styling: Tailwind CSS 3.4.11 with shadcn/ui components
+State Management: React Query (TanStack Query) v5.56.2
+Routing: React Router DOM v6.26.2
+Form Handling: React Hook Form v7.53.0 with Zod validation
+UI Components: Radix UI primitives with custom shadcn/ui implementations
+Design Patterns
+Component-Based Architecture: Modular, reusable components
+Custom Hooks: Encapsulated business logic
+API Client Pattern: Centralized API management
+Form Schema Validation: Type-safe form handling with Zod
+3. Project Structure
+src/
+├── api/                    # API client implementations
+│   ├── apiClient.ts       # Main API client export
+│   ├── students.ts        # Student-related API calls
+│   ├── documents.ts       # Document management APIs
+│   ├── reports.ts         # Report generation APIs
+│   ├── audit.ts           # Audit log APIs
+│   ├── users.ts           # User management APIs
+│   └── utils.ts           # API utilities and helpers
+├── components/            # Reusable UI components
+│   ├── academic/          # Academic management components
+│   │   ├── department/    # Department-specific components
+│   │   ├── faculty/       # Faculty-specific components
+│   │   └── academicYear/  # Academic year components
+│   ├── layout/            # Layout components (Header, Sidebar)
+│   ├── students/          # Student management components
+│   │   ├── document-upload/ # Document upload functionality
+│   │   └── import/        # Bulk import components
+│   └── ui/                # shadcn/ui components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility libraries
+├── mock/                  # Mock data for development
+├── pages/                 # Page components
+├── types/                 # TypeScript type definitions
+└── utils/                 # Utility functions
 
-**URL**: https://lovable.dev/projects/febd37b3-3b7a-4822-892c-ab8a2df71f12
+4. Database Schema Design
+Core Tables Required
 
-## How can I edit this code?
+-- Users table for authentication
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL CHECK (role IN ('super_admin', 'admin')),
+    is_active BOOLEAN DEFAULT true,
+    must_change_password BOOLEAN DEFAULT false,
+    last_login TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+//note: users (admins) will login using thier email and password
 
-There are several ways of editing your application.
+-- Faculties table
+CREATE TABLE faculties (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(10) UNIQUE NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
-**Use Lovable**
+-- Departments table
+CREATE TABLE departments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    code VARCHAR(10) UNIQUE NOT NULL,
+    description TEXT,
+    faculty_id INTEGER REFERENCES faculties(id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/febd37b3-3b7a-4822-892c-ab8a2df71f12) and start prompting.
+-- Academic years table
+CREATE TABLE academic_years (
+    id SERIAL PRIMARY KEY,
+    academic_year VARCHAR(20) UNIQUE NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
-Changes made via Lovable will be committed automatically to this repo.
+-- Students table
+CREATE TABLE students (
+    id SERIAL PRIMARY KEY,
+    registration_id VARCHAR(50) UNIQUE NOT NULL,
+    certificate_id VARCHAR(50) UNIQUE,
+    full_name VARCHAR(255) NOT NULL,
+    gender VARCHAR(10) CHECK (gender IN ('male', 'female')),
+    phone VARCHAR(255),
+    department_id INTEGER REFERENCES departments(id),
+    faculty_id INTEGER REFERENCES faculties(id),
+    academic_year_id INTEGER REFERENCES academic_years(id),
+    gpa DECIMAL(3,2),
+    grade VARCHAR(5),
+    graduation_date DATE,
+    status VARCHAR(20) DEFAULT 'un-cleared' CHECK (status IN ('cleared', 'un-cleared')),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
-**Use your preferred IDE**
+-- Documents table
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    registration_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    document_type VARCHAR(50) NOT NULL CHECK (document_type IN ('photo', 'transcript', 'certificate', 'supporting')),
+    file_name VARCHAR(255) NOT NULL,
+    file_size INTEGER,
+    file_type VARCHAR(100),
+    file_url TEXT NOT NULL,
+    upload_date TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+-- Audit logs table
+CREATE TABLE audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id),
+    action VARCHAR(255) NOT NULL,
+    resource_type VARCHAR(100),
+    resource_id INTEGER,
+    details TEXT,
+    ip_address INET,
+    user_agent TEXT,
+    timestamp TIMESTAMP DEFAULT NOW()
+);
+5. API Design
+Authentication Endpoints
+POST /api/auth/login
+POST /api/auth/logout
+POST /api/auth/refresh
+POST /api/auth/change-password
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+Student Management APIs
+GET    /api/students              # List students with pagination
+GET    /api/students/:id          # Get student details
+POST   /api/students              # Create new student
+PUT    /api/students/:id          # Update student
+DELETE /api/students/:id          # Delete student
+POST   /api/students/bulk-import  # Bulk import students
+Academic Configuration APIs
+GET    /api/departments           # List departments
+POST   /api/departments           # Create department
+PUT    /api/departments/:id       # Update department
+DELETE /api/departments/:id       # Delete department
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+GET    /api/faculties             # List faculties
+POST   /api/faculties             # Create faculty
+PUT    /api/faculties/:id         # Update faculty
+DELETE /api/faculties/:id         # Delete faculty
 
-Follow these steps:
+GET    /api/academic-years        # List academic years
+POST   /api/academic-years        # Create academic year
+PUT    /api/academic-years/:id    # Update academic year
+DELETE /api/academic-years/:id    # Delete academic year
+Document Management APIs
+GET    /api/documents/:studentId  # Get student documents
+POST   /api/documents/upload      # Upload documents
+DELETE /api/documents/:id         # Delete document
+GET    /api/documents/:id/download # Download document
+Certificate Verification API
+GET    /api/verify/:identifier    # Verify certificate by number or registration ID
+Audit and Reports APIs
+GET    /api/audit-logs           # Get audit logs with pagination
+GET    /api/reports/dashboard    # Dashboard statistics
+GET    /api/reports/students     # Student reports
+POST   /api/reports/export       # Export reports
+6. Current Implementation Status
+✅ Completed Features
+Frontend Architecture: Complete React application with TypeScript
+UI Components: Comprehensive shadcn/ui component library implementation
+Student Management: Full CRUD interface with forms and validation
+Academic Configuration: Department, faculty, and academic year management
+Document Management: Upload interface and file handling (frontend)
+Bulk Import: CSV and ZIP file import functionality
+Audit Logging: Interface for viewing audit logs
+Reports Dashboard: Analytics interface with mock data
+Certificate Verification Portal: Complete frontend implementation at C:\Users\pc\Desktop\Certificate Verification Portal\apps\verify
+Responsive Design: Mobile-optimized interface
+Form Validation: Comprehensive Zod schema validation
+Error Handling: Toast notifications and error boundaries
+⚠️ Mock Data Implementation
+All data operations currently use mock data
+API clients return simulated responses
+Local storage used for temporary data persistence
+No real backend integration
+7. Security Considerations
+Frontend Security Measures
+Input validation using Zod schemas
+XSS prevention through React's built-in protection
+File upload validation and type checking
+CSP-ready architecture
+Required Backend Security
+Authentication and authorization (BetterAuth)
+SQL injection prevention
+File upload security
+Rate limiting
+CORS configuration
+Environment variable management
+Data encryption at rest and in transit
+8. Future Development Requirements
+Backend Implementation (Priority 1)
+Authentication System: BetterAuth integration with role-based access
+Database Setup: PostgreSQL with proper migrations
+API Development: RESTful APIs for all frontend features
+File Storage: Secure document storage and retrieval
+Email System: Password reset and notifications
+System Administration (Priority 2)
+User Management: Super admin and admin role implementation
+Permissions: Granular access control
+System Configuration: Application settings management
+Data Migration: Import existing data tools
+Advanced Features (Priority 3)
+Advanced Analytics: Comprehensive reporting system
+Backup System: Automated data backups
+Integration APIs: Third-party system integrations
+Mobile App: React Native companion app
+Notification System: Real-time notifications
+9. Performance Considerations
+Current Optimizations
+React Query for caching and background updates
+Component lazy loading
+Optimized bundle size with Vite
+Image optimization and lazy loading
+Required Backend Optimizations
+Database indexing strategy
+Caching layer (Redis)
+CDN for file storage
+API response optimization
+Prompt for Backend Implementation
+Design and implement a secure Node.js backend for the Alumni Management System and Certificate Verification Portal.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+System Overview
+You are implementing the backend for an Alumni Management System that serves both an administrative interface and a public Certificate Verification Portal at C:\Users\pc\Desktop\Certificate Verification Portal\backend. The system manages student records, academic configurations, documents, and provides certificate verification services.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Functional Requirements
+1. Authentication System
+Technology: Implement BetterAuth for user authentication
+User Creation: Super admin created via initialization script
+Security Features:
+Password reset and email verification
+Force password change on first login
+Session management and JWT tokens
+Access Control: No public registration - admin-only internal system
+2. Database Architecture
+Technology: PostgreSQL as primary database
+Schema Requirements:
+Users (super_admin, admin roles)
+Students (comprehensive profile data)
+Departments, Faculties, Academic Years
+Documents (file metadata and storage references)
+Audit Logs (comprehensive activity tracking)
+Data Relationships: Proper foreign key constraints and referential integrity
+3. Server Technology
+Framework: Node.js with Express using ES modules
+Architecture: RESTful API design
+Environment: Internal/private system (no external signup)
+4. Security Implementation
+Data Protection: Input validation, SQL injection prevention, XSS protection
+File Security: Secure upload handling, file type validation, virus scanning
+Access Control: Role-based permissions, API route protection
+Infrastructure: HTTPS enforcement, CORS configuration, rate limiting
+5. Certificate Verification System
+Public API: Verification endpoint for certificate/registration number lookup
+Data Integrity: Secure student data exposure for verification
+Performance: Optimized queries for public verification portal
+API Specifications
+Authentication APIs
 
-# Step 3: Install the necessary dependencies.
-npm i
+POST /api/auth/login           // User login
+POST /api/auth/logout          // User logout  
+POST /api/auth/refresh         // Token refresh
+POST /api/auth/change-password // Password change
+POST /api/auth/forgot-password // Password reset request
+POST /api/auth/reset-password  // Password reset confirmation
+Administrative APIs
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+
+// Student Management
+GET    /api/students              // List with pagination/filtering
+GET    /api/students/:id          // Student details
+POST   /api/students              // Create student
+PUT    /api/students/:id          // Update student
+DELETE /api/students/:id          // Delete student
+POST   /api/students/bulk-import  // CSV/Excel import
+
+// Academic Configuration
+GET    /api/departments    // Department CRUD
+GET    /api/faculties      // Faculty CRUD  
+GET    /api/academic-years // Academic year CRUD
+
+// Document Management
+POST   /api/documents/upload      // File upload
+GET    /api/documents/:studentId  // Student documents
+DELETE /api/documents/:id         // Delete document
+
+// System Management
+GET    /api/audit-logs           // Activity logs
+GET    /api/reports/dashboard    // Statistics
+POST   /api/reports/export       // Data export
+
+Public Verification API
+
+GET /api/verify/:identifier // Certificate verification
+Implementation Requirements
+Project Setup
+Initialize Node.js project with ES modules
+Configure TypeScript for type safety
+Set up development and production environments
+Configure testing framework (Jest/Vitest)
+Database Implementation
+Design and implement PostgreSQL schema
+Create migration system
+Implement data seeding for initial setup
+Set up connection pooling and optimization
+Authentication & Authorization
+Integrate BetterAuth authentication system
+Implement role-based access control
+Create admin user initialization script
+Set up session management
+File Management System
+Implement secure file upload handling
+Design file storage strategy (local/cloud)
+Create file serving and download endpoints
+Implement file type validation and security
+Security Implementation
+Input validation and sanitization
+SQL injection and XSS prevention
+Rate limiting and DDoS protection
+Secure headers and CORS configuration
+Environment variable management
+Data encryption strategies
+Testing & Documentation
+Unit tests for business logic
+Integration tests for API endpoints
+API documentation (OpenAPI/Swagger)
+Deployment documentation
+Deliverables
+Complete backend application with all specified endpoints
+Database schema and migration files
+Authentication and authorization system
+File upload and management system
+Comprehensive security implementation
+Test suite with good coverage
+API documentation
+Deployment guide and environment setup instructions
+Technical Constraints
+Must use Node.js with Express and ES modules
+PostgreSQL for data persistence
+BetterAuth for authentication
+Internal system only (no public user registration)
+Support for both admin interface and public verification portal
+Production-ready security and performance considerations
+This backend will serve as the foundation for both the Alumni Management System administrative interface and the Certificate Verification Portal, ensuring data consistency, security, and optimal performance.
+
+final and complete project structure tailored for:
+•	✅ Admin Panel at admin.eaugarowe.edu.so at C:\Users\pc\Desktop\Certificate Verification Portal\apps\admin
+•	✅ Certificate Verification Portal at verify.eaugarowe.edu.so at C:\Users\pc\Desktop\Certificate Verification Portal\apps\verify
+•	✅ Shared Node.js + Express backend with PostgreSQL + File Storage at at C:\Users\pc\Desktop\Certificate Verification Portal\apps\backend
+•	Shared folder at C:\Users\pc\Desktop\Certificate Verification Portal\apps\shared
+•	✅ Modern tech stack: React + Vite + Tailwind + TypeScript
+
+eau-credential-system/
+│
+├── apps/                                # Frontend apps (React)
+│   ├── admin/                           # Internal admin panel (EAU staff only)
+│   │   ├── public/                      # Contains index.html
+│   │   ├── src/
+│   │   │   ├── components/              # Reusable components
+│   │   │   ├── pages/                   # Page components
+│   │   │   ├── api/                     # Frontend API handlers (axios)
+│   │   │   ├── hooks/                   # React custom hooks
+│   │   │   ├── App.tsx
+│   │   │   └── main.tsx
+│   │   ├── package.json
+│   │   ├── tailwind.config.ts
+│   │   ├── tsconfig.json
+│   │   └── vite.config.ts
+│
+│   └── verify/                          # Public-facing certificate verification
+│       ├── public/                      # Contains index.html
+│       ├── src/
+│       │   ├── components/
+│       │   ├── pages/
+│       │   ├── api/                     # axios for verification endpoint
+│       │   ├── App.tsx
+│       │   └── main.tsx
+│       ├── package.json
+│       ├── tailwind.config.ts
+│       ├── tsconfig.json
+│       └── vite.config.ts
+│
+├── backend/                             # Node.js + Express REST API
+│   ├── src/
+│   │   ├── config/                      # DB, storage, environment config
+│   │   ├── controllers/                 # Request handling logic
+│   │   ├── middlewares/                # Auth, error handlers
+│   │   ├── models/                      # PostgreSQL DB models
+│   │   ├── routes/                      # API routes: /auth, /students, /verify, /upload
+│   │   ├── services/                    # Business logic layer
+│   │   ├── utils/                       # Helper functions
+│   │   ├── index.ts                     # Main Express server
+│   │   └── app.ts                       # App setup (middleware, routes)
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── .env                             # Environment variables
+│   └── README.md
+│
+├── shared/                              # Shared types, constants (optional)
+│   └── types/
+│       ├── Student.ts
+│       └── Certificate.ts
+│
+├── docker/                              # Optional Docker setup
+│   ├── Dockerfile.backend
+│   └── docker-compose.yml
+│
+├── .gitignore
+├── README.md
+└── vercel.json   # For deployment configs (optional)
+
+
+
+Key summarized
+
+
+✅ System Scope & Roles
+Main Focus: Public-facing Certificate Verification Portal
+
+Supporting Interface: Internal Alumni Management System (Admin UI)
+
+✅ Frontend Tech Stack
+Built with React 18 + TypeScript + Tailwind CSS + shadcn/ui
+
+Uses React Query, React Router, Zod, React Hook Form
+
+Fully componentized structure (/api, /components, /hooks, etc.)
+
+Responsive UI and form validation implemented
+
+✅ Backend Goals
+Node.js + Express (ES Modules)
+
+PostgreSQL schema for users, students, academic setup, documents
+
+Public API for certificate verification:
+GET /api/verify/:identifier
+
+✅ Database Design
+Includes tables for:
+
+users, faculties, departments, academic_years, students, documents, audit_logs
+
+✅ API Coverage
+Auth APIs: Login, logout, refresh, password reset
+
+Student APIs: Full CRUD + bulk import
+
+Academic Config APIs: Faculty, Department, Academic Years
+
+Document Management: Upload, download, delete
+
+Reports & Audit Logs
+
+Certificate Verification API — public access endpoint
+
+✅ Security Considerations
+Zod validation, BetterAuth, CORS, rate limiting, SQL injection/XSS prevention
+
+Role-based access control
+
+Secure file handling
+
+✅ Project Status
+Frontend: Fully functional but runs on mock data
+
+Backend: Pending full implementation
+
+🔒 Important Architecture Rule
+The Alumni Management System is the data backbone, but the Certificate Verification Portal is the primary public utility — and the main justification for the system's development.
+
+## Cloud Storage Implementation
+
+This project uses a **provider-agnostic cloud storage system** that supports multiple cloud storage providers with minimal configuration changes. The implementation uses generic naming conventions instead of provider-specific terms.
+
+### Supported Storage Providers
+
+- **Cloudflare R2** (default configuration)
+- **Amazon S3** 
+- **Google Cloud Storage**
+- **MinIO** (self-hosted S3-compatible)
+- **Any S3-compatible storage service**
+
+### Environment Configuration
+
+The system uses generic environment variables that work across all providers:
+
+```bash
+# Generic Cloud Storage Configuration
+CLOUD_STORAGE_PROVIDER="cloudflare-r2"  # Provider identifier
+CLOUD_STORAGE_ENDPOINT="https://your-account-id.r2.cloudflarestorage.com"
+CLOUD_STORAGE_ACCESS_KEY_ID="your-access-key"
+CLOUD_STORAGE_SECRET_ACCESS_KEY="your-secret-key"
+CLOUD_STORAGE_BUCKET_NAME="your-bucket-name"
+CLOUD_STORAGE_REGION="auto"  # "auto" for R2, specific region for AWS
+CLOUD_STORAGE_FORCE_PATH_STYLE="false"  # Set to "true" for MinIO
+CLOUD_STORAGE_PUBLIC_DOMAIN="your-custom-domain.com"  # Optional
 ```
 
-**Edit a file directly in GitHub**
+### Switching Between Providers
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+To switch from one cloud storage provider to another, simply update the environment variables:
 
-**Use GitHub Codespaces**
+#### Cloudflare R2 (Current)
+```bash
+CLOUD_STORAGE_PROVIDER="cloudflare-r2"
+CLOUD_STORAGE_ENDPOINT="https://your-account-id.r2.cloudflarestorage.com"
+CLOUD_STORAGE_REGION="auto"
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+#### Amazon S3
+```bash
+CLOUD_STORAGE_PROVIDER="aws-s3"
+CLOUD_STORAGE_ENDPOINT=""  # Leave empty for AWS S3
+CLOUD_STORAGE_REGION="us-east-1"
+```
 
-## What technologies are used for this project?
+#### Google Cloud Storage
+```bash
+CLOUD_STORAGE_PROVIDER="google-cloud"
+CLOUD_STORAGE_ENDPOINT="https://storage.googleapis.com"
+```
 
-This project is built with .
+#### MinIO (Self-hosted)
+```bash
+CLOUD_STORAGE_PROVIDER="minio"
+CLOUD_STORAGE_ENDPOINT="https://your-minio-server.com"
+CLOUD_STORAGE_FORCE_PATH_STYLE="true"
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Architecture Benefits
 
-## How can I deploy this project?
+1. **Provider Independence**: Easy migration between cloud storage providers
+2. **Cost Optimization**: Switch to the most cost-effective provider as needed
+3. **Vendor Lock-in Avoidance**: No dependency on provider-specific APIs
+4. **Development Flexibility**: Use different providers for development, staging, and production
 
-Simply open [Lovable](https://lovable.dev/projects/febd37b3-3b7a-4822-892c-ab8a2df71f12) and click on Share -> Publish.
+### File URL Generation
 
-## I want to use a custom domain - is that possible?
+The system automatically generates correct URLs based on the provider:
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+- **Cloudflare R2**: `https://bucket-name.r2.dev/file-key`
+- **AWS S3**: `https://bucket-name.s3.region.amazonaws.com/file-key`
+- **Google Cloud**: `https://storage.googleapis.com/bucket-name/file-key`
+- **Custom Domain**: `https://your-domain.com/file-key` (if configured)
+
+### Implementation Files
+
+Key files implementing the generic storage system:
+
+- `backend/src/config/storage.ts` - Main storage configuration and client setup
+- `backend/src/middleware/upload.ts` - File upload handling with cloud storage
+- `backend/src/services/document.service.ts` - Document management with storage operations
+- `backend/src/utils/testCloudStorage.ts` - Connection testing utility
+
+### Migration Guide
+
+If migrating from a provider-specific implementation:
+
+1. Update environment variables to use `CLOUD_STORAGE_*` prefixes
+2. Set the `CLOUD_STORAGE_PROVIDER` to identify your storage type
+3. Test the connection using the debug endpoint: `GET /api/documents/debug/storage-test`
+4. Verify file uploads and downloads work correctly
+5. Update any hardcoded provider-specific URLs in your frontend code
+
+This architecture ensures your application remains flexible and can adapt to changing storage requirements without major code modifications.

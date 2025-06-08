@@ -1,24 +1,67 @@
-# Logs
-logs
-*.log
+# Dependencies
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Production builds
+dist/
+build/
+.next/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+logs/
+*.log
+
+# IDE and Editor
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+
+# OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+
+# Vercel
+.vercel
+
+# Temporary files
+tmp/
+temp/
+
+# Coverage reports
+coverage/
+
+# Debug
+.debug/
+
+# Development History
+.history/
+
+# Development Documentation (exclude from production repo)
+ACADEMIC_CONFIG_SKELETON_IMPLEMENTATION.md
+LOGOUT_IMPROVEMENT_SUMMARY.md
+PRODUCTION_READINESS_FIXES_SUMMARY.md
+PERFORMANCE_OPTIMIZATION_REPORT.md
+SKELETON_LOADING_TEST_RESULTS.md
+SKELETON_LOADING_IMPLEMENTATION_SUMMARY.md
+SKELETON_LOADING_IMPLEMENTATION_GUIDE.md
+PRODUCTION_READINESS_AUDIT_REPORT.md
+PROJECT_IMPLEMENTATION_LOG.md
+DOCUMENT_VISIBILITY_AND_PERFORMANCE_FIXES.md
+PRODUCTION_READINESS_VERIFICATION_REPORT.md
+GITHUB_SETUP_GUIDE.md
+cleanup-for-production.sh
