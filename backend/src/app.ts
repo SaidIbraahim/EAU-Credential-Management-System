@@ -55,12 +55,18 @@ app.use((req, res, next) => {
 // Optimized middleware stack
 app.use(helmet());
 
-// CORS configuration with environment variable support
+// CORS configuration with production URLs included
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [
+  origin: [
+    // Production URLs
+    'https://eau-admin.vercel.app',
+    'https://eau-verify.vercel.app',
+    // Development URLs
     'http://localhost:3000',
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    // Add environment variable URLs if present
+    ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [])
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
