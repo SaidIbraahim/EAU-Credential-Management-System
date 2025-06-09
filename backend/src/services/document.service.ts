@@ -103,6 +103,18 @@ export class DocumentService {
 
   // Helper method to add presigned URLs to documents
   private async addPresignedUrls(documents: Document[]): Promise<DocumentWithPresignedUrl[]> {
+    // Check if cloud storage is available
+    const { storageClient } = await import('../config/storage');
+    
+    if (!storageClient) {
+      // Cloud storage not configured - return documents without presigned URLs
+      console.log('Cloud storage not configured - returning documents without presigned URLs');
+      return documents.map(doc => ({
+        ...doc,
+        presignedUrl: undefined
+      }));
+    }
+
     const documentsWithUrls = await Promise.all(
       documents.map(async (doc) => {
         try {
@@ -111,11 +123,13 @@ export class DocumentService {
           
           // If it's a full URL, extract the key
           if (doc.fileUrl.startsWith('http')) {
+            const { extractKeyFromUrl } = await import('../config/storage');
             storageKey = extractKeyFromUrl(doc.fileUrl);
             console.log(`Extracted key from URL: ${doc.fileUrl} -> ${storageKey}`);
           }
           
           // Generate presigned URL for the storage key
+          const { generatePresignedUrl } = await import('../config/storage');
           const presignedUrl = await generatePresignedUrl(storageKey, 3600); // 1 hour expiry
           console.log(`Generated presigned URL for document ${doc.id}: ${presignedUrl}`);
           
@@ -124,8 +138,7 @@ export class DocumentService {
             presignedUrl
           };
         } catch (error) {
-          console.error(`Error generating presigned URL for document ${doc.id}:`, error);
-          console.error(`File URL: ${doc.fileUrl}`);
+          console.warn(`Could not generate presigned URL for document ${doc.id} (cloud storage not configured):`, error);
           return {
             ...doc,
             presignedUrl: undefined
