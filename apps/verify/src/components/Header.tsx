@@ -11,8 +11,8 @@ const Header: React.FC<HeaderProps> = ({ showPrintableHeader = false }) => {
 
     if (showFallback || imageError) {
       return (
-        <div className={`${className} bg-[#2c2484] text-white rounded-full flex items-center justify-center`}>
-          <GraduationCap className="w-12 h-12" />
+        <div className={`${className} bg-[#2c2484] text-white rounded-full flex items-center justify-center flex-shrink-0`}>
+          <GraduationCap className="w-8 h-8 sm:w-10 md:w-12 lg:h-12" />
         </div>
       );
     }
@@ -21,7 +21,7 @@ const Header: React.FC<HeaderProps> = ({ showPrintableHeader = false }) => {
       <img 
         src="/EAU-Logo.png" 
         alt="EAU Logo" 
-        className={className}
+        className={`${className} flex-shrink-0`}
         onError={() => setImageError(true)}
       />
     );
@@ -44,25 +44,40 @@ const Header: React.FC<HeaderProps> = ({ showPrintableHeader = false }) => {
 
   return (
     <div className="bg-[#2c2484] shadow-sm no-print">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-              <LogoComponent className="w-12 h-12 object-contain" />
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          {/* Logo and Title Section */}
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
+            {/* Logo Container */}
+            <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+              <LogoComponent className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">EAST AFRICA UNIVERSITY - GAROWE CAMPUS</h1>
-              <p className="text-sm text-blue-100">Certificate Verification Portal</p>
+            
+            {/* Text Content */}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white leading-tight">
+                <span className="block sm:hidden">EAU - GAROWE</span>
+                <span className="hidden sm:block md:hidden">EAST AFRICA UNIVERSITY</span>
+                <span className="hidden md:block">EAST AFRICA UNIVERSITY - GAROWE CAMPUS</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-blue-100 mt-0.5 truncate">
+                Certificate Verification Portal
+              </p>
             </div>
           </div>
-          <a 
-            href="https://eaugarowe.edu.so/" 
-            className="px-4 py-2 bg-white text-[#2c2484] rounded-md hover:bg-opacity-90 transition-colors font-medium"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            University Website
-          </a>
+          
+          {/* Website Link */}
+          <div className="flex-shrink-0">
+            <a 
+              href="https://eaugarowe.edu.so/" 
+              className="px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2 bg-white text-[#2c2484] rounded-md hover:bg-opacity-90 transition-colors font-medium text-xs sm:text-sm whitespace-nowrap"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="hidden sm:inline">Visit Official Website</span>
+              <span className="sm:hidden">Visit Site</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

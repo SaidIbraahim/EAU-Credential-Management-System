@@ -6,6 +6,62 @@
 /* Custom CSS for better typography and layout */
 body {
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhanced responsive design utilities */
+@layer utilities {
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+  
+  .text-responsive-xl {
+    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+  }
+  
+  .padding-responsive {
+    @apply px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4;
+  }
+  
+  .container-responsive {
+    @apply px-3 sm:px-4 lg:px-6 xl:px-8;
+  }
+}
+
+/* Improved mobile touch targets */
+@media (max-width: 640px) {
+  button, 
+  a,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better text readability on mobile */
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, 
+  select, 
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Enhanced focus states for accessibility */
+*:focus {
+  outline: 2px solid #2c2484;
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }
 
 /* Print styles for clean single-page output */
@@ -81,4 +137,67 @@ body {
   .print-page {
     display: none;
   }
+}
+
+/* Enhanced mobile responsiveness */
+@media (max-width: 768px) {
+  /* Adjust container padding for mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Better spacing for mobile cards */
+  .bg-white {
+    margin-bottom: 1rem;
+  }
+  
+  /* Ensure images don't overflow on mobile */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Tablet-specific optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  /* Better hover states for desktop */
+  button:hover,
+  a:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+  }
+}
+
+/* Loading states and animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Improved button styles */
+.btn-primary {
+  @apply bg-[#2c2484] text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-all duration-200 font-medium;
+}
+
+.btn-secondary {
+  @apply bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium;
 }
