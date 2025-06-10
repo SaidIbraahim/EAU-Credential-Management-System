@@ -90,11 +90,11 @@ const ResultSection: React.FC<ResultSectionProps> = ({ result, onPrint }) => {
             </h2>
             <div className="space-y-1">
               <p className="text-sm sm:text-base text-gray-600">
-                <span className="font-medium">Registration:</span> {student.registrationId}
+                <span className="font-medium">Registration ID:</span> {student.registrationId}
               </p>
               {student.certificateId && (
                 <p className="text-sm sm:text-base text-[#d30000] font-semibold">
-                  <span className="text-gray-600 font-medium">Certificate Number:</span> {student.certificateId}
+                  <span className="text-gray-600 font-medium">Certificate No:</span> {student.certificateId}
                 </p>
               )}
               <p className="text-sm sm:text-base text-gray-600">

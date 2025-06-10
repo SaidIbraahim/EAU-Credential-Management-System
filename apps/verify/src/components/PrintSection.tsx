@@ -63,7 +63,7 @@ const PrintSection: React.FC<PrintSectionProps> = ({ result }) => {
         {/* Enhanced Header with Logo and University Info */}
         <div className="print-header mb-6">
           <div className="flex items-center justify-center gap-4 mb-3">
-            <LogoComponent className="w-16 h-16 object-contain" />
+            <LogoComponent className="w-20 h-20 object-contain" />
             <div className="text-center">
               <h1 className="text-xl font-bold text-[#2c2484] leading-tight">EAST AFRICA UNIVERSITY</h1>
               <h2 className="text-lg font-semibold text-[#2c2484] leading-tight">GAROWE CAMPUS</h2>
@@ -107,12 +107,12 @@ const PrintSection: React.FC<PrintSectionProps> = ({ result }) => {
             </h2>
             <div className="space-y-2">
               <div className="flex">
-                <span className="font-semibold text-gray-700 w-32">Registration:</span>
+                <span className="font-semibold text-gray-700 w-32">Registration ID:</span>
                 <span className="text-gray-900">{student.registrationId}</span>
               </div>
               {student.certificateId && (
                 <div className="flex">
-                  <span className="font-semibold text-gray-700 w-32">Certificate No.:</span>
+                  <span className="font-semibold text-gray-700 w-32">Certificate No:</span>
                   <span className="text-red-600 font-bold">{student.certificateId}</span>
                 </div>
               )}
