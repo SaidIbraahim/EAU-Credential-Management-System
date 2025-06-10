@@ -66,9 +66,17 @@ html {
 
 /* Enhanced Print styles for beautiful output */
 @media print {
-  /* Hide all screen elements */
-  .no-print {
+  /* Hide all screen elements completely */
+  .no-print,
+  .bg-gray-50,
+  .bg-blue-50,
+  .shadow-lg,
+  .shadow-sm,
+  .rounded-lg,
+  .border-b,
+  .divide-y {
     display: none !important;
+    visibility: hidden !important;
   }
 
   /* Show only print elements */
@@ -86,6 +94,8 @@ html {
     overflow: visible !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
   }
 
   /* Page setup for A4 with minimal margins for more content */
@@ -132,6 +142,8 @@ html {
     padding: 4px 6px !important;
     vertical-align: top !important;
     font-size: 8pt !important;
+    background: white !important;
+    box-shadow: none !important;
   }
 
   /* Image sizing for print with better quality */
@@ -146,19 +158,21 @@ html {
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
   }
 
-  /* Background colors for print */
-  .bg-green-50 {
+  /* Background colors for print - only for specific print elements */
+  .print-page .bg-green-50 {
     background-color: #f0f9ff !important;
     border: 1px solid #22c55e !important;
   }
   
-  .bg-gray-50 {
+  .print-page .bg-gray-50 {
     background-color: #f9fafb !important;
   }
   
-  .bg-blue-50 {
+  .print-page .bg-blue-50 {
     background-color: #eff6ff !important;
     border: 1px solid #3b82f6 !important;
   }
