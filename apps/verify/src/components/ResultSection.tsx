@@ -51,44 +51,70 @@ const ResultSection: React.FC<ResultSectionProps> = ({ result, onPrint }) => {
             <span className="sm:hidden">Verified Successfully</span>
           </h3>
         </div>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Print button clicked');
-            
-            // Add visual feedback
-            e.currentTarget.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-              e.currentTarget.style.transform = 'scale(1)';
-            }, 150);
-            
-            // Call print function
-            onPrint();
-          }}
-          onTouchStart={(e) => {
-            // Ensure touch events work on mobile
-            e.currentTarget.style.backgroundColor = '#0088cc';
-          }}
-          onTouchEnd={(e) => {
-            setTimeout(() => {
-              e.currentTarget.style.backgroundColor = '';
-            }, 200);
-          }}
-          className="flex items-center gap-2 bg-[#09c] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-opacity-90 transition-colors no-print flex-shrink-0 shadow-sm cursor-pointer"
-          style={{ 
-            touchAction: 'manipulation',
-            WebkitTapHighlightColor: 'rgba(0, 0, 0, 0.1)',
-            userSelect: 'none',
-            minHeight: '48px',
-            minWidth: '48px'
-          }}
-          type="button"
-        >
-          <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
-          <span className="hidden sm:inline">Print Verification</span>
-          <span className="sm:hidden">Print</span>
-        </button>
+        <div className="flex gap-2">
+          {/* Main Print Button */}
+          <button
+            onClick={() => {
+              console.log('=== PRINT BUTTON CLICKED ===');
+              console.log('onPrint function:', onPrint);
+              console.log('typeof onPrint:', typeof onPrint);
+              
+              try {
+                if (typeof onPrint === 'function') {
+                  console.log('Calling onPrint function...');
+                  onPrint();
+                  console.log('onPrint function called successfully');
+                } else {
+                  console.error('onPrint is not a function!');
+                  // Direct fallback
+                  alert('Print function error. Trying direct print...');
+                  window.print();
+                }
+              } catch (error) {
+                console.error('Error in print button click:', error);
+                alert('Print error occurred. Trying direct print...');
+                window.print();
+              }
+            }}
+            className="flex items-center gap-2 bg-[#09c] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-opacity-90 transition-colors no-print flex-shrink-0 shadow-sm cursor-pointer"
+            style={{ 
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'rgba(0, 0, 0, 0.1)',
+              userSelect: 'none',
+              minHeight: '48px',
+              minWidth: '48px'
+            }}
+            type="button"
+          >
+            <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Print Verification</span>
+            <span className="sm:hidden">Print</span>
+          </button>
+          
+          {/* Backup Direct Print Button */}
+          <button
+            onClick={() => {
+              console.log('=== BACKUP PRINT BUTTON CLICKED ===');
+              try {
+                console.log('Direct print attempt...');
+                window.print();
+                console.log('Direct print successful');
+              } catch (error) {
+                console.error('Direct print failed:', error);
+                alert('Print not supported on this device. Please use browser menu → Print or take a screenshot.');
+              }
+            }}
+            className="flex items-center gap-1 bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-700 transition-colors no-print"
+            style={{ 
+              touchAction: 'manipulation',
+              minHeight: '44px'
+            }}
+            type="button"
+            title="Backup print method"
+          >
+            📄
+          </button>
+        </div>
       </div>
       
       {/* Main Content */}
