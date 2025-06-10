@@ -22,54 +22,15 @@ const App: React.FC = () => {
   }, []);
 
   const handlePrint = () => {
-    // Mobile-friendly print handling
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // For mobile devices, we need to use a different approach
-      // First, let's try the standard print method
-      try {
-        // Ensure print section is visible momentarily
-        const printSection = document.querySelector('.print-page') as HTMLElement;
-        if (printSection) {
-          printSection.style.display = 'block';
-          printSection.style.position = 'fixed';
-          printSection.style.top = '0';
-          printSection.style.left = '0';
-          printSection.style.width = '100vw';
-          printSection.style.height = '100vh';
-          printSection.style.zIndex = '9999';
-          printSection.style.backgroundColor = 'white';
-          printSection.style.overflow = 'auto';
-          
-          // Force a brief delay to ensure styles are applied
-          setTimeout(() => {
-            window.print();
-            
-            // Restore original styles after print dialog
-            setTimeout(() => {
-              printSection.style.display = '';
-              printSection.style.position = '';
-              printSection.style.top = '';
-              printSection.style.left = '';
-              printSection.style.width = '';
-              printSection.style.height = '';
-              printSection.style.zIndex = '';
-              printSection.style.backgroundColor = '';
-              printSection.style.overflow = '';
-            }, 100);
-          }, 100);
-        } else {
-          // Fallback to regular print
-          window.print();
-        }
-      } catch (error) {
-        console.error('Print failed:', error);
-        // Last resort - regular print
+    // Simplified and more reliable print handling
+    try {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
         window.print();
-      }
-    } else {
-      // Desktop - use regular print
+      }, 100);
+    } catch (error) {
+      console.error('Print failed:', error);
+      // Direct fallback
       window.print();
     }
   };

@@ -74,6 +74,18 @@ html {
   /* Show only print elements */
   .print-page {
     display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: auto !important;
+    background: white !important;
+    overflow: visible !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   /* Page setup for A4 with optimal margins */
@@ -102,22 +114,6 @@ html {
   }
 
   /* Print page styling with proper spacing */
-  .print-page {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    page-break-after: avoid !important;
-    page-break-inside: avoid !important;
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    z-index: auto !important;
-    background: white !important;
-    overflow: visible !important;
-  }
-
-  /* Ensure content fits on one page */
   .print-header {
     page-break-inside: avoid !important;
     margin-bottom: 1.5rem !important;
