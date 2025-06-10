@@ -24,27 +24,40 @@ const App: React.FC = () => {
   const handlePrint = () => {
     console.log('Print function called');
     
-    // For better mobile compatibility, ensure print content is ready
-    const printElement = document.querySelector('.print-page');
-    if (printElement) {
-      // Brief delay to ensure DOM is ready, then print
+    // Enhanced mobile detection for better Android support
+    const userAgent = navigator.userAgent;
+    const isAndroid = /Android/i.test(userAgent);
+    const isSamsung = /Samsung/i.test(userAgent);
+    
+    console.log('Device info:', { isAndroid, isSamsung, userAgent });
+    
+    // Special handling for Android devices, especially Samsung
+    if (isAndroid) {
+      console.log('Android device detected, using enhanced print method');
+      
+      // For Android devices, add a small delay and try print
       setTimeout(() => {
         try {
+          console.log('Attempting Android print...');
           window.print();
-        } catch (error) {
-          console.error('Print failed:', error);
-          // Fallback instructions for mobile
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          if (isMobile) {
-            alert('To print on mobile:\n• iOS: Tap Share → Print\n• Android: Tap Menu → Print\n• Or take a screenshot');
-          } else {
-            alert('Print failed. Please use Ctrl+P or browser menu → Print');
-          }
+          console.log('Android print triggered successfully');
+        } catch (printError) {
+          console.error('Android print failed:', printError);
+          // Show Android-specific instructions
+          alert('To print on Android:\n\n1. Tap browser menu (⋯)\n2. Select "Print"\n3. Choose printer or "Save as PDF"\n\nOr take a screenshot for your records.');
         }
-      }, 50);
+      }, 300);
     } else {
-      console.error('Print content not found');
-      window.print();
+      // Non-Android devices (iOS, Desktop)
+      try {
+        console.log('Non-Android device, using standard print');
+        setTimeout(() => {
+          window.print();
+        }, 100);
+      } catch (error) {
+        console.error('Print failed:', error);
+        alert('Print failed. Please use browser menu → Print or Ctrl+P');
+      }
     }
   };
 
