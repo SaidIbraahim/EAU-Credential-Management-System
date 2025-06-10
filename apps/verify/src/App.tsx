@@ -22,17 +22,29 @@ const App: React.FC = () => {
   }, []);
 
   const handlePrint = () => {
-    console.log('=== HANDLE PRINT FUNCTION CALLED ===');
-    console.log('User agent:', navigator.userAgent);
-    console.log('Window.print available:', typeof window.print);
+    console.log('Print function called');
     
-    try {
-      console.log('Attempting to print...');
+    // For better mobile compatibility, ensure print content is ready
+    const printElement = document.querySelector('.print-page');
+    if (printElement) {
+      // Brief delay to ensure DOM is ready, then print
+      setTimeout(() => {
+        try {
+          window.print();
+        } catch (error) {
+          console.error('Print failed:', error);
+          // Fallback instructions for mobile
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (isMobile) {
+            alert('To print on mobile:\n• iOS: Tap Share → Print\n• Android: Tap Menu → Print\n• Or take a screenshot');
+          } else {
+            alert('Print failed. Please use Ctrl+P or browser menu → Print');
+          }
+        }
+      }, 50);
+    } else {
+      console.error('Print content not found');
       window.print();
-      console.log('Print function executed successfully');
-    } catch (error) {
-      console.error('Print function failed:', error);
-      alert(`Print failed: ${error.message}\n\nPlease try:\n- Use browser menu → Print\n- Press Ctrl+P (PC) or Cmd+P (Mac)\n- Take a screenshot`);
     }
   };
 
