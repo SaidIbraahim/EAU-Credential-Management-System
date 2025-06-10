@@ -22,16 +22,43 @@ const App: React.FC = () => {
   }, []);
 
   const handlePrint = () => {
-    // Simplified and more reliable print handling
-    try {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    console.log('Print clicked - Mobile:', isMobile);
+    
+    if (isMobile) {
+      // For mobile devices, show instructions and try different approaches
+      const userAgent = navigator.userAgent;
+      let instructions = '';
+      
+      if (/iPhone|iPad|iPod/.test(userAgent)) {
+        instructions = 'On iOS: Tap the Share button (□↑) in Safari and select "Print"';
+      } else if (/Android/.test(userAgent)) {
+        instructions = 'On Android: Tap the menu (⋯) and select "Print" or "Share → Print"';
+      } else {
+        instructions = 'Tap your browser menu and look for "Print" option';
+      }
+      
+      // Try window.print first, with fallback
+      try {
+        if (typeof window.print === 'function') {
+          window.print();
+        } else {
+          // Fallback: Show alert with instructions
+          alert(`Print not directly supported on this device.\n\n${instructions}\n\nAlternatively, take a screenshot of this verification.`);
+        }
+      } catch (error) {
+        console.error('Print failed:', error);
+        alert(`Print error. Please try:\n\n${instructions}\n\nOr take a screenshot for your records.`);
+      }
+    } else {
+      // Desktop - simple and reliable
+      try {
         window.print();
-      }, 100);
-    } catch (error) {
-      console.error('Print failed:', error);
-      // Direct fallback
-      window.print();
+      } catch (error) {
+        console.error('Print failed:', error);
+        alert('Print not supported. Please try using Ctrl+P or take a screenshot.');
+      }
     }
   };
 

@@ -56,14 +56,34 @@ const ResultSection: React.FC<ResultSectionProps> = ({ result, onPrint }) => {
             e.preventDefault();
             e.stopPropagation();
             console.log('Print button clicked');
+            
+            // Add visual feedback
+            e.currentTarget.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }, 150);
+            
+            // Call print function
             onPrint();
           }}
-          className="flex items-center gap-2 bg-[#09c] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-opacity-90 transition-colors no-print flex-shrink-0 shadow-sm"
+          onTouchStart={(e) => {
+            // Ensure touch events work on mobile
+            e.currentTarget.style.backgroundColor = '#0088cc';
+          }}
+          onTouchEnd={(e) => {
+            setTimeout(() => {
+              e.currentTarget.style.backgroundColor = '';
+            }, 200);
+          }}
+          className="flex items-center gap-2 bg-[#09c] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-opacity-90 transition-colors no-print flex-shrink-0 shadow-sm cursor-pointer"
           style={{ 
             touchAction: 'manipulation',
             WebkitTapHighlightColor: 'rgba(0, 0, 0, 0.1)',
-            userSelect: 'none'
+            userSelect: 'none',
+            minHeight: '48px',
+            minWidth: '48px'
           }}
+          type="button"
         >
           <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
           <span className="hidden sm:inline">Print Verification</span>
