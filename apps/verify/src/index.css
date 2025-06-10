@@ -64,7 +64,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Print styles for clean single-page output */
+/* Enhanced Print styles for beautiful output */
 @media print {
   /* Hide all screen elements */
   .no-print {
@@ -76,19 +76,20 @@ html {
     display: block !important;
   }
 
-  /* Page setup for A4 single page */
+  /* Page setup for A4 with optimal margins */
   @page {
     size: A4;
-    margin: 15mm;
+    margin: 20mm 15mm;
   }
 
-  /* Reset body and html for print */
+  /* Reset body and html for print with better typography */
   html, body {
     height: auto !important;
     background: white !important;
     color: black !important;
-    font-size: 12pt !important;
-    line-height: 1.2 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+    font-family: 'Inter', 'Segoe UI', sans-serif !important;
   }
 
   /* Container adjustments */
@@ -98,7 +99,7 @@ html {
     padding: 0 !important;
   }
 
-  /* Print page styling */
+  /* Print page styling with proper spacing */
   .print-page {
     width: 100% !important;
     max-width: 100% !important;
@@ -111,24 +112,132 @@ html {
   /* Ensure content fits on one page */
   .print-header {
     page-break-inside: avoid !important;
+    margin-bottom: 1.5rem !important;
   }
 
-  /* Table styling for print */
+  /* Enhanced table styling for print */
   table {
     page-break-inside: avoid !important;
     width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  
+  /* Table cells */
+  td, th {
+    border: 1px solid #666 !important;
+    padding: 8px !important;
+    vertical-align: top !important;
   }
 
-  /* Image sizing for print */
+  /* Image sizing for print with better quality */
   img {
     max-width: 100% !important;
     height: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Force single page */
+  /* Force color printing for better appearance */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Background colors for print */
+  .bg-green-50 {
+    background-color: #f0f9ff !important;
+    border: 1px solid #22c55e !important;
+  }
+  
+  .bg-gray-50 {
+    background-color: #f9fafb !important;
+  }
+  
+  .bg-blue-50 {
+    background-color: #eff6ff !important;
+    border: 1px solid #3b82f6 !important;
+  }
+
+  /* Text colors for print */
+  .text-green-800 {
+    color: #166534 !important;
+  }
+  
+  .text-green-700 {
+    color: #15803d !important;
+  }
+  
+  .text-blue-600 {
+    color: #2563eb !important;
+  }
+  
+  .text-red-600 {
+    color: #dc2626 !important;
+  }
+
+  /* Header typography for print */
+  h1 { font-size: 18pt !important; font-weight: bold !important; }
+  h2 { font-size: 16pt !important; font-weight: bold !important; }
+  h3 { font-size: 14pt !important; font-weight: 600 !important; }
+  h4 { font-size: 12pt !important; font-weight: 600 !important; }
+
+  /* Better spacing for print layout */
+  .flex {
+    display: flex !important;
+  }
+  
+  .flex-1 {
+    flex: 1 !important;
+  }
+  
+  .gap-6 {
+    gap: 1.5rem !important;
+  }
+  
+  .gap-4 {
+    gap: 1rem !important;
+  }
+  
+  .gap-2 {
+    gap: 0.5rem !important;
+  }
+
+  /* Margins and padding for print */
+  .mb-6 {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .mb-3 {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  .mt-6 {
+    margin-top: 1.5rem !important;
+  }
+  
+  .p-3 {
+    padding: 0.75rem !important;
+  }
+  
+  .p-4 {
+    padding: 1rem !important;
+  }
+
+  /* Border styles for print */
+  .border-2 {
+    border-width: 2px !important;
+  }
+  
+  .rounded {
+    border-radius: 0.25rem !important;
+  }
+  
+  .border-gray-300 {
+    border-color: #d1d5db !important;
+  }
+  
+  .border-green-200 {
+    border-color: #bbf7d0 !important;
   }
 }
 
