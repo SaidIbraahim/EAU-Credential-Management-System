@@ -53,7 +53,12 @@ const ResultSection: React.FC<ResultSectionProps> = ({ result, onPrint }) => {
         </div>
         <button
           onClick={onPrint}
-          className="flex items-center gap-2 bg-[#09c] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-opacity-90 transition-colors no-print flex-shrink-0 shadow-sm"
+          className="flex items-center gap-2 bg-[#09c] text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg text-sm sm:text-base font-medium hover:bg-opacity-90 transition-colors no-print flex-shrink-0 shadow-sm print-button-mobile"
+          style={{ 
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'rgba(0, 0, 0, 0.1)',
+            userSelect: 'none'
+          }}
         >
           <Printer className="h-4 w-4 sm:h-5 sm:w-5" />
           <span className="hidden sm:inline">Print Verification</span>

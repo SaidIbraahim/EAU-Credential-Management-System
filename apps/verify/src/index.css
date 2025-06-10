@@ -90,6 +90,8 @@ html {
     font-size: 11pt !important;
     line-height: 1.4 !important;
     font-family: 'Inter', 'Segoe UI', sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Container adjustments */
@@ -107,6 +109,12 @@ html {
     padding: 0 !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: auto !important;
+    background: white !important;
+    overflow: visible !important;
   }
 
   /* Ensure content fits on one page */
@@ -308,5 +316,37 @@ html {
 }
 
 .btn-secondary {
-  @apply bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium;
+  @apply bg-gray-600 text-white hover:bg-gray-700;
+}
+
+/* Mobile print button enhancements */
+@media (max-width: 768px) {
+  .print-button-mobile {
+    @apply px-6 py-4 text-base font-semibold;
+    min-height: 52px !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Ensure print content is ready for mobile viewing */
+  .mobile-print-ready {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* Mobile print dialog support */
+@media print and (max-width: 768px) {
+  .print-page {
+    transform: scale(1) !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+  }
+  
+  /* Ensure mobile print shows all content */
+  * {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 }

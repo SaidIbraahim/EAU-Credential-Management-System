@@ -58,7 +58,7 @@ const PrintSection: React.FC<PrintSectionProps> = ({ result }) => {
   };
 
   return (
-    <div className="hidden print:block print-page">
+    <div className="hidden print:block print-page mobile-print-ready">
       <div className="max-w-4xl mx-auto bg-white">
         {/* Enhanced Header with Logo and University Info */}
         <div className="print-header mb-6">
