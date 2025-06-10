@@ -1,6 +1,6 @@
 import { PrismaClient, Document } from '@prisma/client';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { storageClient, STORAGE_BUCKET_NAME, extractKeyFromUrl, generatePresignedUrl } from '../config/storage';
+import { storageClient, STORAGE_BUCKET_NAME, extractKeyFromUrl } from '../config/storage';
 import { uploadToCloudStorage, CloudStorageFile } from '../middleware/upload';
 
 const prisma = new PrismaClient();
