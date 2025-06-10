@@ -62,7 +62,7 @@ const App: React.FC = () => {
 
           {/* Results Section */}
           {result && (
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-2xl lg:max-w-3xl mx-auto">
               {/* New Search Button */}
               <div className="text-center mb-4 sm:mb-6">
                 <button
