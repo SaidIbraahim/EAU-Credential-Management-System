@@ -395,7 +395,7 @@ sequenceDiagram
 #### Prerequisites
 - Node.js 18+ installed
 - PostgreSQL database
-- Cloudflare R2 storage account
+- Cloudflare R2 storage account or AWS S3
 - Vercel account for deployment
 
 #### Environment Variables
@@ -409,11 +409,12 @@ DATABASE_URL="postgresql://user:password@host:port/database"
 JWT_SECRET="your-jwt-secret"
 JWT_REFRESH_SECRET="your-refresh-secret"
 
-# File Storage (Cloudflare R2)
-R2_ENDPOINT="your-r2-endpoint"
-R2_ACCESS_KEY_ID="your-access-key"
-R2_SECRET_ACCESS_KEY="your-secret-key"
-R2_BUCKET_NAME="your-bucket-name"
+# File Storage (Cloudflare R2, AWS S3, etc)
+CLOUD_STORAGE_PROVIDER=
+CLOUD_STORAGE_ENDPOINT=
+CLOUD_STORAGE_ACCESS_KEY_ID=
+CLOUD_STORAGE_SECRET_ACCESS_KEY=
+CLOUD_STORAGE_BUCKET_NAME=
 
 # Email Configuration
 SMTP_HOST="smtp.example.com"
