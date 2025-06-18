@@ -11,6 +11,68 @@ export interface AuthUser {
   isActive: boolean;
 }
 
+// In-memory user cache to reduce database queries
+interface CachedUser extends AuthUser {
+  cachedAt: number;
+}
+
+const userCache = new Map<number, CachedUser>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
+// Helper to get cached user or fetch from database
+const getCachedUser = async (userId: number): Promise<AuthUser | null> => {
+  const cached = userCache.get(userId);
+  const now = Date.now();
+  
+  // Return cached user if still valid
+  if (cached && (now - cached.cachedAt) < CACHE_TTL) {
+    return {
+      id: cached.id,
+      email: cached.email,
+      role: cached.role,
+      isActive: cached.isActive
+    };
+  }
+  
+  // Fetch from database and cache
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        isActive: true,
+      }
+    });
+
+    if (user) {
+      // Cache the user data
+      userCache.set(userId, {
+        ...user,
+        cachedAt: now
+      });
+      
+      return user;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Database error in auth middleware:', error);
+    // If database is down, try to use cached data even if expired
+    if (cached) {
+      console.warn('⚠️ Using expired cached user data due to database error');
+      return {
+        id: cached.id,
+        email: cached.email,
+        role: cached.role,
+        isActive: cached.isActive
+      };
+    }
+    throw error;
+  }
+};
+
 // Extend Express Request interface
 declare global {
   namespace Express {
@@ -40,15 +102,7 @@ export const authenticate = async (
     const decoded = jwt.verify(token, secret) as { userId: number };
 
     // Fetch user from database to ensure they still exist and get current info
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        isActive: true,
-      }
-    });
+    const user = await getCachedUser(decoded.userId);
 
     if (!user) {
       throw new AppError('User not found', 401);

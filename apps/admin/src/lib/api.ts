@@ -30,14 +30,14 @@ api.interceptors.response.use(
     
     // Only show toast for non-401 errors or when not logging out
     if (error.response?.status !== 401 || !isLoggingOut) {
-      toast.error(errorMessage);
+    toast.error(errorMessage);
     }
     
     // Handle 401 errors more gracefully
     if (error.response?.status === 401) {
       // Only force redirect if we're not already in a logout process
       if (!isLoggingOut && !window.location.pathname.includes('/login')) {
-        localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_token');
         // Use React Router navigation instead of window.location for smoother transitions
         window.dispatchEvent(new CustomEvent('auth:unauthorized'));
       }
@@ -112,8 +112,8 @@ export const authApi = {
   logout: async () => {
     isLoggingOut = true;
     try {
-      localStorage.removeItem('auth_token');
-      await api.post('/auth/logout');
+    localStorage.removeItem('auth_token');
+    await api.post('/auth/logout');
     } finally {
       isLoggingOut = false;
     }

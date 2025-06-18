@@ -76,7 +76,7 @@ const PrintSection: React.FC<PrintSectionProps> = ({ result }) => {
         </div>
 
         {/* Verification Status */}
-        <div className="text-center mb-4 p-2 bg-green-50 border border-green-200 rounded">
+        <div className="text-center mb-4 p-2 border border-green-200 rounded">
           <p className="text-base font-bold text-green-800">✓ CERTIFICATE VERIFIED SUCCESSFULLY</p>
           <p className="text-xs text-green-700">Verification Date: {formatDate(result.verificationDate)}</p>
         </div>
@@ -85,11 +85,11 @@ const PrintSection: React.FC<PrintSectionProps> = ({ result }) => {
         <div className="flex items-start gap-4 mb-4">
           {/* Student Photo */}
           <div className="flex-shrink-0">
-            <div className="w-24 h-24 bg-gray-100 border border-gray-300 rounded overflow-hidden">
+            <div className="w-24 h-24 border border-gray-300 rounded overflow-hidden">
               <img
                 src={getStudentPhoto()}
                 alt={student.fullName}
-                className="w-full h-full object-contain bg-white"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(student.fullName)}&size=200&background=2c2484&color=fff`;
                 }}
@@ -125,7 +125,7 @@ const PrintSection: React.FC<PrintSectionProps> = ({ result }) => {
         </div>
 
         {/* Academic Information Table */}
-        <div className="mb-4">
+        <div className="mb-4 bg-gray-50 rounded-lg p-3">
           <h3 className="text-sm font-bold text-[#2c2484] mb-2 flex items-center gap-1">
             <GraduationCap className="w-4 h-4" />
             Academic Information
@@ -157,7 +157,7 @@ const PrintSection: React.FC<PrintSectionProps> = ({ result }) => {
             </div>
             
             {/* Official Seal */}
-            <div className="text-center border border-[#2c2484] p-2 bg-gray-50">
+            <div className="text-center border border-[#2c2484] p-2">
               <div className="w-12 h-12 bg-[#2c2484] text-white rounded-full flex items-center justify-center mx-auto mb-1">
                 <GraduationCap className="w-6 h-6" />
               </div>
@@ -185,8 +185,8 @@ interface PrintRowProps {
 
 const PrintRow: React.FC<PrintRowProps> = ({ label, value }) => {
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="py-2 px-3 text-left w-1/3 border border-gray-400 bg-gray-50 font-semibold text-sm">
+    <tr>
+      <td className="py-2 px-3 text-left w-1/3 border border-gray-400 font-semibold text-sm">
         {label}:
       </td>
       <td className="py-2 px-3 border border-gray-400 text-sm">

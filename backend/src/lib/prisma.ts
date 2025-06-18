@@ -7,11 +7,12 @@ export const prisma = new PrismaClient({
     { level: 'error', emit: 'stdout' },
     { level: 'warn', emit: 'stdout' }
   ],
-  // Connection pooling optimization - DATABASE_URL must be set via environment variable
+  // Enhanced connection pooling for Neon database
   ...(process.env.DATABASE_URL ? {
     datasources: {
       db: {
-        url: process.env.DATABASE_URL + (process.env.DATABASE_URL.includes('?') ? '&' : '?') + 'connection_limit=10&pool_timeout=20'
+        url: process.env.DATABASE_URL + (process.env.DATABASE_URL.includes('?') ? '&' : '?') + 
+            'connection_limit=8&pool_timeout=30&connect_timeout=60&socket_timeout=60&pgbouncer=true'
       }
     }
   } : {})
@@ -24,16 +25,26 @@ prisma.$on('query', (e) => {
   }
 });
 
-// Optimize Prisma middleware for better performance
+// Optimize Prisma middleware for better performance and error handling
 prisma.$use(async (params, next) => {
   const before = Date.now();
-  const result = await next(params);
-  const after = Date.now();
   
-  const duration = after - before;
-  if (duration > 500) {
-    console.log(`⚠️ Slow ${params.model}.${params.action}: ${duration}ms`);
+  try {
+    const result = await next(params);
+    const after = Date.now();
+    
+    const duration = after - before;
+    if (duration > 500) {
+      console.log(`⚠️ Slow ${params.model}.${params.action}: ${duration}ms`);
+    }
+    
+    return result;
+  } catch (error: any) {
+    // Handle connection pool exhaustion gracefully
+    if (error.code === 'P2024') {
+      console.error('🔥 Connection pool exhausted. Consider optimizing queries or increasing pool size.');
+      // Add exponential backoff or circuit breaker logic here if needed
+    }
+    throw error;
   }
-  
-  return result;
 }); 

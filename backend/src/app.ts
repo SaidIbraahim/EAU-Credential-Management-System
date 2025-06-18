@@ -65,6 +65,9 @@ const corsOptions = {
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:5174',
+    'http://localhost:8080',
+    'http://localhost:8081',
+    'http://localhost:8082',
     // Add environment variable URLs if present
     ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [])
   ],
