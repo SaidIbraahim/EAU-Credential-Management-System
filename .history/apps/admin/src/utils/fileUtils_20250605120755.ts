@@ -1,0 +1,267 @@
+import Papa from 'papaparse';
+import { Student } from '@/types';
+
+// Helper function to find entity ID by name
+const findEntityIdByName = (entities: any[], name: string, entityType: string): number => {
+  if (!entities || entities.length === 0) {
+    throw new Error(`${entityType} data not available. Please refresh and try again.`);
+  }
+  
+  const entity = entities.find(item => 
+    item.name.toLowerCase().trim() === name.toLowerCase().trim()
+  );
+  
+  if (!entity) {
+    throw new Error(`${entityType} "${name}" not found. Please check the spelling or add it to the system first.`);
+  }
+  
+  return entity.id;
+};
+
+/**
+ * Parses a CSV file containing student data
+ * @param file The CSV file to parse
+ * @param departments Available departments for ID lookup
+ * @param faculties Available faculties for ID lookup  
+ * @param academicYears Available academic years for ID lookup
+ * @returns A promise that resolves to an array of Student objects
+ */
+export const parseCSV = (
+  file: File, 
+  departments: any[] = [], 
+  faculties: any[] = [], 
+  academicYears: any[] = []
+): Promise<Student[]> => {
+  return new Promise((resolve, reject) => {
+    // Validate file type
+    if (!file.type.includes('csv') && !file.name.endsWith('.csv')) {
+      reject(new Error("Invalid file format. Please upload a CSV file."));
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      reject(new Error("CSV file is too large. Maximum allowed size is 10MB."));
+      return;
+    }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        try {
+          if (results.errors && results.errors.length > 0) {
+            // Check if there are parsing errors from PapaParse
+            const errorMessages = results.errors.map(err => `Row ${err.row}: ${err.message}`);
+            reject(new Error(`CSV parsing errors: ${errorMessages.join(', ')}`));
+            return;
+          }
+          
+          // Check if file is empty
+          if (results.data.length === 0) {
+            reject(new Error("The CSV file is empty. Please upload a file with student data."));
+            return;
+          }
+          
+          // Validate required columns exist
+          const firstRow = results.data[0] as any;
+          const requiredColumns = ['registration_no', 'full_name', 'department', 'faculty', 'academic_year'];
+          const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+          
+          if (missingColumns.length > 0) {
+            reject(new Error(`CSV is missing required columns: ${missingColumns.join(', ')}`));
+            return;
+          }
+          
+          // Check for duplicate certificate IDs within the file itself
+          const certificateIds = new Set<string>();
+          const registrationIds = new Set<string>();
+          
+          const students = results.data.map((row: any, index: number) => {
+            try {
+              // Extract and validate required fields
+              const registrationId = row['registration_no']?.trim() || '';
+              const certificateId = row['certificate_id']?.trim() || '';
+              const fullName = row['full_name']?.trim() || '';
+              const departmentName = row['department']?.trim() || '';
+              const facultyName = row['faculty']?.trim() || '';
+              const academicYear = row['academic_year']?.trim() || '';
+              
+              // Validate required fields
+              if (!registrationId) {
+                throw new Error(`Row ${index + 1}: Registration No is required`);
+              }
+              if (!fullName) {
+                throw new Error(`Row ${index + 1}: Full Name is required`);
+              }
+              if (!departmentName) {
+                throw new Error(`Row ${index + 1}: Department is required`);
+              }
+              if (!facultyName) {
+                throw new Error(`Row ${index + 1}: Faculty is required`);
+              }
+              if (!academicYear) {
+                throw new Error(`Row ${index + 1}: Academic Year is required`);
+              }
+
+              // Check for duplicate registration IDs within the CSV file
+              if (registrationIds.has(registrationId)) {
+                throw new Error(`Row ${index + 1}: Duplicate Registration No: ${registrationId} found in the CSV file`);
+              }
+              registrationIds.add(registrationId);
+              
+              // Check for duplicate certificate IDs within the CSV file (if not empty)
+              if (certificateId && certificateIds.has(certificateId)) {
+                throw new Error(`Row ${index + 1}: Duplicate Certificate ID: ${certificateId} found in the CSV file`);
+              }
+              if (certificateId) {
+                certificateIds.add(certificateId);
+              }
+
+              // Find entity IDs by names
+              const departmentId = findEntityIdByName(departments, departmentName, 'Department');
+              const facultyId = findEntityIdByName(faculties, facultyName, 'Faculty');
+              const academicYearId = findEntityIdByName(academicYears, academicYear, 'Academic Year');
+
+              // Parse and validate other fields
+              const gpa = row['gpa'] ? parseFloat(row['gpa']) : undefined;
+              if (gpa !== undefined && (gpa < 0 || gpa > 4)) {
+                throw new Error(`Row ${index + 1}: GPA must be between 0 and 4, got ${gpa}`);
+              }
+
+              // Parse gender
+              const gender = row['gender']?.toLowerCase().trim();
+              let studentGender: 'MALE' | 'FEMALE' | undefined;
+              if (gender === 'male') {
+                studentGender = 'MALE';
+              } else if (gender === 'female') {
+                studentGender = 'FEMALE';
+              }
+
+              // Parse status
+              const status = row['status']?.toLowerCase().trim() === 'cleared' ? 'CLEARED' : 'UN_CLEARED';
+
+              // Parse graduation date
+              let graduationDate: string | undefined;
+              if (row['graduation_date']) {
+                try {
+                  graduationDate = new Date(row['graduation_date']).toISOString();
+                } catch {
+                  throw new Error(`Row ${index + 1}: Invalid graduation date format`);
+                }
+              }
+
+              // Create Student object with proper structure
+              const student: Omit<Student, 'id' | 'createdAt' | 'updatedAt'> = {
+                registrationId,
+                certificateId: certificateId || undefined,
+                fullName,
+                gender: studentGender,
+                phone: row['phone_number']?.trim() || undefined,
+                departmentId,
+                facultyId,
+                academicYearId,
+                gpa,
+                grade: row['grade']?.trim() || undefined,
+                graduationDate,
+                status
+              };
+
+              return student as Student;
+            } catch (error) {
+              if (error instanceof Error) {
+                throw error;
+              }
+              throw new Error(`Row ${index + 1}: ${error}`);
+            }
+          });
+
+          resolve(students);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      error: (error) => {
+        reject(error);
+      }
+    });
+  });
+};
+
+/**
+ * Processes a ZIP file containing student documents
+ * @param file The ZIP file to process
+ * @returns A promise that resolves to a confirmation message
+ */
+export const processZipFile = async (file: File): Promise<string> => {
+  // In a real implementation, this would extract the ZIP and process each file
+  try {
+    // Validate file type
+    if (!file.type.includes('zip') && !file.name.endsWith('.zip')) {
+      throw new Error("Invalid file format. Please upload a ZIP archive.");
+    }
+    
+    // Validate zip file size
+    if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      throw new Error("ZIP file is too large. Maximum allowed size is 100MB.");
+    }
+    
+    // In a real implementation, we would:
+    // 1. Extract the ZIP file (using JSZip or a backend service)
+    // 2. Validate the folder structure (each student should have a folder named with their student_id)
+    // 3. Upload each document to cloud storage
+    // 4. Associate the uploaded documents with the corresponding student in the database
+    
+    // Return basic information for now
+    return `Processed ZIP file: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Validates a list of students against existing data to check for duplicates
+ * @param newStudents The list of new students to validate
+ * @param existingStudents The list of existing students in the database
+ * @returns An object containing lists of valid students, duplicates, and error messages
+ */
+export const validateStudents = (
+  newStudents: Student[], 
+  existingStudents: Student[]
+): { 
+  validStudents: Student[],
+  duplicates: Student[],
+  errors: string[] 
+} => {
+  const errors: string[] = [];
+  const duplicates: Student[] = [];
+  const validStudents: Student[] = [];
+  
+  // Check for duplicates with existing data
+  newStudents.forEach(newStudent => {
+    // Check for duplicate student IDs
+    const duplicateStudentId = existingStudents.find(
+      existingStudent => existingStudent.student_id === newStudent.student_id
+    );
+    
+    // Check for duplicate certificate IDs
+    const duplicateCertificateId = existingStudents.find(
+      existingStudent => 
+        existingStudent.certificate_id && 
+        newStudent.certificate_id && 
+        existingStudent.certificate_id === newStudent.certificate_id
+    );
+    
+    if (duplicateStudentId) {
+      duplicates.push(newStudent);
+      errors.push(`Student ID ${newStudent.student_id} already exists in the system`);
+    } else if (duplicateCertificateId) {
+      duplicates.push(newStudent);
+      errors.push(`Certificate ID ${newStudent.certificate_id} already exists in the system`);
+    } else {
+      validStudents.push(newStudent);
+    }
+  });
+  
+  return { validStudents, duplicates, errors };
+};

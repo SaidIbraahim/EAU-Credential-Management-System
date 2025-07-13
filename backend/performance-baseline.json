@@ -1,0 +1,49 @@
+{
+  "timestamp": "2025-07-11T12:16:13.407Z",
+  "results": [
+    {
+      "testName": "User Login Query",
+      "category": "auth",
+      "duration": 531,
+      "status": "critical"
+    },
+    {
+      "testName": "Student List Query",
+      "category": "students",
+      "duration": 871,
+      "status": "critical"
+    },
+    {
+      "testName": "Dashboard Stats Query",
+      "category": "reports",
+      "duration": 261,
+      "status": "slow"
+    },
+    {
+      "testName": "Audit Log Query",
+      "category": "audit",
+      "duration": 456,
+      "status": "slow"
+    },
+    {
+      "testName": "User Management Query",
+      "category": "admin",
+      "duration": 265,
+      "status": "slow"
+    }
+  ],
+  "systemStats": {
+    "summary": {
+      "totalRequests": 0,
+      "requests5Min": 0,
+      "requests1Hour": 0,
+      "avgDuration5Min": 0,
+      "avgDuration1Hour": 0,
+      "slowQueries5Min": 0,
+      "slowQueries1Hour": 0,
+      "slowQueryThreshold": 500
+    },
+    "slowestEndpoints": [],
+    "recentSlowQueries": []
+  }
+}

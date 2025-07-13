@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS for better typography and layout */
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Print styles for clean single-page output */
+@media print {
+  /* Hide all screen elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Show only print elements */
+  .print-page {
+    display: block !important;
+  }
+
+  /* Page setup for A4 single page */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  /* Reset body and html for print */
+  html, body {
+    height: auto !important;
+    background: white !important;
+    color: black !important;
+    font-size: 12pt !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Container adjustments */
+  .container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Print page styling */
+  .print-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure content fits on one page */
+  .print-header {
+    page-break-inside: avoid !important;
+  }
+
+  /* Table styling for print */
+  table {
+    page-break-inside: avoid !important;
+    width: 100% !important;
+  }
+
+  /* Image sizing for print */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Force single page */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Screen-only styles */
+@media screen {
+  .print-page {
+    display: none;
+  }
+}

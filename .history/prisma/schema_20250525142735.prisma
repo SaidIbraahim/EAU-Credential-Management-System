@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int        @id @default(autoincrement())
+  username           String     @unique
+  email             String     @unique
+  passwordHash       String
+  role              Role       @default(ADMIN)
+  isActive          Boolean    @default(true)
+  mustChangePassword Boolean    @default(false)
+  lastLogin         DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+model Faculty {
+  id          Int          @id @default(autoincrement())
+  name        String
+  code        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  departments Department[]
+  students    Student[]
+
+  @@map("faculties")
+}
+
+model Department {
+  id          Int       @id @default(autoincrement())
+  name        String
+  code        String    @unique
+  description String?
+  facultyId   Int
+  faculty     Faculty   @relation(fields: [facultyId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  students    Student[]
+
+  @@map("departments")
+}
+
+model AcademicYear {
+  id           Int       @id @default(autoincrement())
+  academicYear String    @unique
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  students     Student[]
+
+  @@map("academic_years")
+}
+
+model Student {
+  id             Int          @id @default(autoincrement())
+  registrationId String       @unique
+  certificateId  String?      @unique
+  fullName       String
+  gender         Gender
+  email          String?
+  departmentId   Int
+  department     Department   @relation(fields: [departmentId], references: [id])
+  facultyId      Int
+  faculty        Faculty      @relation(fields: [facultyId], references: [id])
+  academicYearId Int
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  gpa            Decimal?     @db.Decimal(3, 2)
+  grade          String?
+  graduationDate DateTime?
+  status         Status       @default(UN_CLEARED)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  documents      Document[]
+
+  @@map("students")
+}
+
+model Document {
+  id          Int          @id @default(autoincrement())
+  studentId   Int
+  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  documentType DocumentType
+  fileName    String
+  fileSize    Int?
+  fileType    String?
+  fileUrl     String
+  description String?
+  uploadDate  DateTime     @default(now())
+  createdAt   DateTime     @default(now())
+
+  @@map("documents")
+}
+
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  action       String
+  resourceType String?
+  resourceId   Int?
+  details      String?
+  ipAddress    String?
+  userAgent    String?
+  timestamp    DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Status {
+  CLEARED
+  UN_CLEARED
+}
+
+enum DocumentType {
+  PHOTO
+  TRANSCRIPT
+  CERTIFICATE
+  SUPPORTING
+}

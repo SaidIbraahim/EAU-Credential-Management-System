@@ -1,0 +1,6 @@
+version: 2
+authtoken: 2wEuiymG39mNyqFh3yRlsiI303v_7VABdH8Et4RPhsbs1x4kL
+tunnels:
+  certificate-app:
+    proto: http
+    addr: 3000 

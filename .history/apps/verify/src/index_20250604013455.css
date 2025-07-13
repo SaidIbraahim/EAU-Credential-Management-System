@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS for better typography and layout */
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Print-specific styles for A4 optimization */
+@media print {
+  @page {
+    size: A4;
+    margin: 0.4in;
+  }
+  
+  .print-page {
+    max-width: 100%;
+    font-size: 10px;
+    line-height: 1.2;
+    height: auto;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .print-header {
+    page-break-inside: avoid;
+    margin-bottom: 8px;
+  }
+  
+  /* Ensure student photo displays properly */
+  .print-page img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  /* Optimize table spacing */
+  .print-page table {
+    page-break-inside: avoid;
+    border-collapse: collapse;
+  }
+  
+  .print-page tr {
+    page-break-inside: avoid;
+  }
+  
+  .print-page td {
+    padding: 1px 3px;
+    line-height: 1.1;
+  }
+  
+  /* Hide elements that shouldn't print */
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Ensure colors print correctly */
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  /* Ultra compact spacing for A4 */
+  .print-page h1 {
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.1;
+  }
+  
+  .print-page h2 {
+    font-size: 12px;
+    margin: 0;
+    line-height: 1.1;
+  }
+  
+  .print-page h3 {
+    font-size: 12px;
+    margin: 0;
+    line-height: 1.1;
+  }
+  
+  .print-page p {
+    margin: 1px 0;
+    line-height: 1.1;
+  }
+  
+  /* Force single page */
+  .print-page {
+    page-break-after: avoid;
+    page-break-before: avoid;
+  }
+  
+  /* Minimize all margins and padding */
+  .print-page > * {
+    margin-bottom: 4px;
+  }
+  
+  /* Compact borders */
+  .print-page .border-t,
+  .print-page .border-b {
+    border-width: 1px;
+  }
+}
+
+/* Screen-only styles */
+@media screen {
+  .print-header {
+    display: none;
+  }
+}

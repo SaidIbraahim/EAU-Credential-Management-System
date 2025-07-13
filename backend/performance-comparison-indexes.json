@@ -1,0 +1,55 @@
+{
+  "timestamp": "2025-07-11T12:06:05.793Z",
+  "optimization": "Database Indexes",
+  "results": [],
+  "overallImprovement": 0,
+  "baseline": {
+    "timestamp": "2025-07-11T12:00:06.483Z",
+    "results": [
+      {
+        "testName": "User Login Query",
+        "category": "auth",
+        "duration": 642,
+        "status": "critical"
+      },
+      {
+        "testName": "Student List Query",
+        "category": "students",
+        "duration": 913,
+        "status": "critical"
+      },
+      {
+        "testName": "Dashboard Stats Query",
+        "category": "reports",
+        "duration": 310,
+        "status": "slow"
+      },
+      {
+        "testName": "Audit Log Query",
+        "category": "audit",
+        "duration": 527,
+        "status": "slow"
+      },
+      {
+        "testName": "User Management Query",
+        "category": "admin",
+        "duration": 327,
+        "status": "slow"
+      }
+    ],
+    "systemStats": {
+      "summary": {
+        "totalRequests": 0,
+        "requests5Min": 0,
+        "requests1Hour": 0,
+        "avgDuration5Min": 0,
+        "avgDuration1Hour": 0,
+        "slowQueries5Min": 0,
+        "slowQueries1Hour": 0,
+        "slowQueryThreshold": 500
+      },
+      "slowestEndpoints": [],
+      "recentSlowQueries": []
+    }
+  }
+}
